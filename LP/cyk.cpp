@@ -62,8 +62,9 @@ void print_table(){
 	cout<<"table"<<endl;
 	for(int i = table.size()-1; i >=0; i--){
 		cout<<i<<":\t";
-		cout<<"|";
+		
 		for(int j = 0; j<table[i].size(); j++){
+			cout<<"|";
 			print_vector(table[i][j]);
 			cout<<"|\t";
 		}
@@ -115,13 +116,11 @@ int main(){
 	}
 	table.push_back(bottom_row);
 
-	// print_table();
-
+	// filling rest of the rows
 	for (int l = 1; l < len; l++){
 		vector< vector<string> > row;
 		int cur_length = l+1;
 		for(int index = 0; index <(len - l); index++){
-			vector<string> non_terminals;
 			set<string> non_terminals2;
 			for(int partition = 1; partition<cur_length; partition++){
 				int partition_left = partition;
@@ -131,45 +130,25 @@ int main(){
 				// cout<<"secondcell :\t"<<(partition_right - 1)<<","<<(partition_left)+index<<endl;
 				vector<string> first_cell = table[partition_left - 1][index];
 				vector<string> second_cell = table[partition_right -1][(partition_left) + index];
-				// print_vector(first_cell);
-				// cout<<endl;
-				// print_vector(second_cell);
-				// cout<<endl;
-
 				vector<string> combined = combine(first_cell, second_cell);
-				// print_vector(combined);
-				// cout<<endl;
-				
+
 				set<string> non_terminals_set;
 				for(int i = 0; i<combined.size(); i++){
 					vector<string> intermediate_non_terminals = inverse_productions[combined[i]];
-					// if(intermediate_non_terminals.size() == 0)
-					// 	continue;
-					for(int j = 0; j<intermediate_non_terminals.size(); j++){
-						non_terminals_set.insert(intermediate_non_terminals[j]);
-					}
+					non_terminals_set.insert(intermediate_non_terminals.begin(), intermediate_non_terminals.end());
 
 				}
-				vector<string> temp(non_terminals_set.begin(), non_terminals_set.end());
-				
-				non_terminals.insert(non_terminals.end(), temp.begin(), temp.end());
-				non_terminals2.insert(temp.begin(), temp.end());
+
+				non_terminals2.insert(non_terminals_set.begin(), non_terminals_set.end());
 
 			}
-			// cout<<"final";
-			// print_vector(non_terminals);
-			// cout<<endl;
+			
 			vector<string> non_terminals3(non_terminals2.begin(), non_terminals2.end());
 			row.push_back(non_terminals3);
 
 		}
-		// print_table();
+
 		table.push_back(row);
-		// for(int i = 0 ; i<row.size(); i++){
-		// 	print_vector(row[i]);
-		// 	cout<<endl;
-		// }
-		// print_table();
 	}
 
 	print_table();
