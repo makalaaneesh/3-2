@@ -1,4 +1,4 @@
-#include"helper.h"
+#include"../helper.h"
 
 struct sems
 {
@@ -18,8 +18,6 @@ int main(){
 	s->x = 0;
 	s->y = 1;
 
-	printf("P1.this is x %d \n",s->x);
-	printf("P1.this is y %d \n",s->y);
 
 	sem_init(&s->s1, 0, token+1);
 	sem_init(&s->s2, 0, token+2);

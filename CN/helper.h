@@ -17,23 +17,23 @@ union semun{
 /*-----------------------------Helper Functions -------------------------------------*/
 
 
-int allocateSharedMemory(int n, int token, int i){
+int allocateSharedMemory(int n, int token){
 
 	if (token == 0){
 		token = IPC_PRIVATE;
 	}
-	if (i == 0)
-		return shmget(token, n, IPC_CREAT |0666);
-	else
-		return shmget(token, n, 0666);
+	return shmget(token, n, IPC_CREAT |0666);
 	
 }
 
 void* mapSharedMemory(int id){
 	void *addr;
 	addr = shmat(id,NULL,0); // id, specify NULL so the system choses the space to map the memory, flags are usually 0
-	shmctl(id, IPC_RMID, NULL); // set the memory to be destroyed after the last process detaches it.
 	return addr;
+}
+
+void cleanUpShm(int id){
+	shmctl(id, IPC_RMID, NULL); // set the memory to be destroyed after the last process detaches it.
 }
 
 
