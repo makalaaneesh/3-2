@@ -53,5 +53,5 @@ int main(){
 	kill(s->p1_pid, SIGUSR1);
 	while(1)
 		pause();
-
+	raise(SIGINT);
 }

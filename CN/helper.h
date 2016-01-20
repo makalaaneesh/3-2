@@ -36,6 +36,10 @@ void cleanUpShm(int id){
 	shmctl(id, IPC_RMID, NULL); // set the memory to be destroyed after the last process detaches it.
 }
 
+void cleanUpSem(int id){
+	semctl(id,0,IPC_RMID);
+}
+
 
 void sem_down(int *semid){
 	struct sembuf sb;

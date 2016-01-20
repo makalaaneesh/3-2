@@ -52,5 +52,6 @@ int main(){
 	printf("P1.this is p2 pid %d \n",s->p2_pid);
 	while(1)
 		pause();
+	raise(SIGINT);
 
 }
