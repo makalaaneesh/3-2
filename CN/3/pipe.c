@@ -37,6 +37,7 @@ int execute(int process_index){
 				printf("Dup2 error\n");
 				exit(1);
 			}
+			close(pipefd[0]);
 		}// any read from STDIN will be from the pipe
 
 		// recursive call for the next process
@@ -50,6 +51,7 @@ int execute(int process_index){
 				printf("Dup2 error\n");
 				exit(1);
 			}
+			close(pipefd[1]);
 		}// any write to the pipe will now be STDOUT
 
 		//executing process
