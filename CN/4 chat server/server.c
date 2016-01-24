@@ -43,20 +43,26 @@ void process_input(char *input){
     // printf("%s\n", token);
     if(strcmp(token, "init") == 0 && stringp != NULL){
     	printf("Adding new client\n");
-		token = strtok(NULL, delim);
-		char * client_pid = token;
+    	fflush(stdout);
+		token = strtok(NULL, "|");
+		char * client_pid = (char *)malloc(sizeof(token));
+		strcpy(client_pid,token);
+		// client_pid[strlen(client_pid)-1] = '\0';
 
     	client_fifos_fds[client_fd_index++] = open(client_pid, O_WRONLY);
-    	printf("New client added %s", client_pid);
+    	printf("New client added %s\n", client_pid);
+    	fflush(stdout);
     	return;
     }	
 
     printf("%s", input);
-	// int i;
-	// for(i = 0; i<client_fd_index; i++){
-	// 	int w = write(client_fifos_fds[i], buf, sizeof(buf)); //writing to each client
-	// 	print_error(w, "write to fifo failed");
-	// }
+	int i;
+	for(i = 0; i<client_fd_index; i++){
+		// printf("writing to fifo id%d\n", client_fifos_fds[i]);
+		int w = write(client_fifos_fds[i], input, PIPE_BUF); //writing to each client
+		// fflush(stdout);
+		print_error(w, "write to fifo failed");
+	}
 	memset(input, 0, sizeof(input));
 }
 

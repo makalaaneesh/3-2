@@ -21,10 +21,11 @@ int server_to_client;
 
 print_error(int val, char* msg){
 	if (val < 0){
-		printf("%s\n", msg);
+		printf("%s error code = %d\n", msg, val);
 		exit(1);
 	}
 }
+
 
 
 
@@ -46,6 +47,7 @@ void* writing_thread(void * arg){
 		snprintf(msg, sizeof(msg), "%s: %s",myfifo, write_buf);
 		int w = write(client_to_server, msg, sizeof(msg)); //writing to server
 		print_error(w, "write to fifo failed");
+		fflush(stdout);
 		// printf("Wrote to server");
 
 	}
@@ -57,8 +59,9 @@ void * reading_thread(void * arg){
 
 		int r = read(server_to_client, read_buf, PIPE_BUF);
 		print_error(r, "read failed");
-		
 		printf("Server->%s", read_buf);
+
+		fflush(stdout);
 		memset(read_buf, 0, sizeof(read_buf));
 
 	}
@@ -82,27 +85,30 @@ void client_init(){
 	// opening fifo that the server will use to reply to the client
 	mkfifo(myfifo, 0666);
 	server_to_client = open(myfifo, O_RDWR);
+	read_buf = (char *)malloc(sizeof(char)*PIPE_BUF);
+	printf("myfifo id is%d\n", server_to_client);
 
 }
 
 
 
 int main(){
+	printf("%d\n", PIPE_BUF);
 	client_init();
 
 	char init_msg[PIPE_BUF];
-	snprintf(init_msg, sizeof(init_msg), "%s %s\n","init", myfifo);
+	snprintf(init_msg, sizeof(init_msg), "%s %s|\n","init", myfifo);
 	printf("Intiial message is %s\n", init_msg);
-	int w = write(client_to_server, init_msg, sizeof(init_msg));
+	int w = write(client_to_server, init_msg, PIPE_BUF);
 	print_error(w, "initial write to fifo failed");
 
 
 	pthread_t wt, rt;
 	pthread_create(&wt, NULL, writing_thread, (void*)0);
-	// pthread_create(&rt, NULL, reading_thread, (void*)0);
+	pthread_create(&rt, NULL, reading_thread, (void*)0);
 
 	pthread_join(wt,NULL);
-	// pthread_join(rt,NULL);
+	pthread_join(rt,NULL);
 	
 
 
