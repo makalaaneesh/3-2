@@ -38,31 +38,38 @@ void get_service_fifo(){
 void service_exec(){
 	char *write_buf ;
 	char *read_buf ;
-	int write_bufsize;
-	write_buf = (char *)malloc(sizeof(char)*PIPE_BUF);
+	size_t write_bufsize;
+	write_buf = NULL;
 	read_buf =(char *)malloc(sizeof(char)*PIPE_BUF);
 
 	get_service_fifo();
 
 
-	// while(1){
+	while(1){
 
 
-	// 	// read input from stdin
-	// 	ssize_t in  = getline(&write_buf, &write_bufsize, stdin);
-	// 	print_error(in, "failed to get input");
+		// read input from stdin
+		ssize_t in  = getline(&write_buf, &write_bufsize, stdin);
+		print_error(in, "failed to get input");
 
-	// 	if(strcmp(write_buf, "exit") == 0){
-	// 		printf("Quitting.\n");
-	// 		exit(1);
-	// 	}
-	// 	//write to service via fifo
+		if(strcmp(write_buf, "exit") == 0){
+			printf("Quitting.\n");
+			exit(1);
+		}
+		//write to service via fifo
+		printf("Writing %s[]", write_buf);
 
-	// 	int w = write(service_fifo_fd, write_buf, sizeof(write_buf)); //writing to server
-	// 	print_error(w, "write to fifo failed");
-	// 	fflush(stdout);
+		char msg[PIPE_BUF];
+		snprintf(msg, sizeof(msg), "%s",write_buf);
+		int w = write(service_fifo_fd, msg, sizeof(msg)); 
 
-	// }
+		
+		// int w = write(service_fifo_fd, write_buf, PIPE_BUF); //writing to server
+		// write_buf = NULL;
+		print_error(w, "write to fifo failed");
+		fflush(stdout);
+
+	}
 }
 
 void register_for_service(char * service){

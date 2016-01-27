@@ -7,9 +7,11 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <limits.h>
+#include <poll.h>
+#include <stropts.h>
 
 #define MAX_CLIENTS 10
-#define NO_OF_SERVICES 1
+#define NO_OF_SERVICES 2
 
 char *fifo = "server";
 char *buf;
@@ -18,7 +20,9 @@ int register_fd;
 int client_fd_index;
 int client_fifos_fds[MAX_CLIENTS];
 char *list_of_services[NO_OF_SERVICES];
-// int service_fifos[NO_OF_SERVICES];
+int service_fifos[NO_OF_SERVICES];
+FILE *popens[NO_OF_SERVICES];
+int service_fifos_index;
 
 print_error(int val, char* msg){
 	if (val < 0){
@@ -38,6 +42,7 @@ int exists_in(char * str, char* list[], int size){
 }
 
 int server_init(){
+	service_fifos_index = 0;
 	buf = (char *)malloc(sizeof(char)*PIPE_BUF);
 	mkfifo(fifo, 0666);
 	int fd = open(fifo, O_RDWR); //read write so that the fifo does not get closed when there are no clients
@@ -52,7 +57,7 @@ int server_init(){
 	char * service3 = (char *)malloc(sizeof(char)*4);
 	strcpy(service3, "s3");
 	list_of_services[0] = service1;
-	// list_of_services[1] = service2;
+	list_of_services[1] = service2;
 	// list_of_services[2] = service3;
 
 // storing the fifo names
@@ -78,6 +83,9 @@ int server_init(){
     	char command[50];
     	snprintf(command, sizeof(command), "./%s",service);
     	FILE *s = popen(command, "r");
+    	popens[service_fifos_index] = s;
+    	int service_fd = fileno(s);
+    	service_fifos[service_fifos_index++] = service_fd;
 		if(s == NULL){
 			printf("popen error\n");
 			exit(1);
@@ -146,10 +154,46 @@ void* register_clients(void * arg){
 }
 
 
-int main(){
-	pthread_t reg;
-	pthread_create(&reg, NULL, register_clients, (void*)0);
+void * logging(void * arg){
+	int timeout = 200;
+	int ret;
+	int i;
+	struct pollfd fds[NO_OF_SERVICES];
+	for(i= 0; i<NO_OF_SERVICES; i++){
+		fds[i].fd = service_fifos[i];
+		fds[i].events = POLLRDNORM;
 
+	}
+	char *log_buf = (char *)malloc(sizeof(char)* 100);
+	while(1){
+		// printf("Polling\n");
+		ret = poll(fds, NO_OF_SERVICES, timeout);
+		if(ret > 0){
+			// printf("Event occured\n");
+			for(i= 0; i<NO_OF_SERVICES; i++){
+				if(fds[i].revents != 0){
+
+					int r = read(fds[i].fd, log_buf, PIPE_BUF);
+					// fgets(log_buf, PIPE_BUF, popens[i]);
+					print_error(r,"read failed");
+					printf("%s", log_buf);
+					fflush(stdout);
+					memset(log_buf, 0, sizeof(log_buf));
+				}
+			}
+		}
+	}
+	
+
+}
+
+int main(){
+	server_init();
+	pthread_t reg,_log;
+	pthread_create(&reg, NULL, register_clients, (void*)0);
+	pthread_create(&_log, NULL, logging, (void*)0);
+
+	pthread_join(_log,NULL);
 	pthread_join(reg,NULL);
 	
 
