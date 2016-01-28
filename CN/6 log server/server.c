@@ -85,6 +85,7 @@ int server_init(){
     	FILE *s = popen(command, "r");
     	popens[service_fifos_index] = s;
     	int service_fd = fileno(s);
+    	print_error(service_fd,"could not obtain fd from FILE*");
     	service_fifos[service_fifos_index++] = service_fd;
 		if(s == NULL){
 			printf("popen error\n");
@@ -178,7 +179,7 @@ void * logging(void * arg){
 					print_error(r,"read failed");
 					printf("%s", log_buf);
 					fflush(stdout);
-					memset(log_buf, 0, sizeof(log_buf));
+					// memset(log_buf, 0, sizeof(log_buf));
 				}
 			}
 		}

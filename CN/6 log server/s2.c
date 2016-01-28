@@ -38,9 +38,9 @@ int main(){
 		int r = read(service_fifo_fd, buf, PIPE_BUF);
 		print_error(r, "read failed");
 		// printing to stdout which will be redirected to log server
-		printf("Service 2-> %s", buf);
+		printf("Service 2->%s", buf);
 		fflush(stdout);
-		memset(buf, 0, sizeof(buf));
+		// memset(buf, 0, sizeof(buf));
 	}
 
 }
