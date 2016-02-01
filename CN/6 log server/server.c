@@ -172,7 +172,7 @@ void * logging(void * arg){
 		if(ret > 0){
 			// printf("Event occured\n");
 			for(i= 0; i<NO_OF_SERVICES; i++){
-				if(fds[i].revents != 0){
+				if(fds[i].revents & POLLRDNORM){
 
 					int r = read(fds[i].fd, log_buf, PIPE_BUF);
 					// fgets(log_buf, PIPE_BUF, popens[i]);

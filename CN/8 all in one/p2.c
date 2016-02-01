@@ -12,8 +12,9 @@
 #define MAX_CLIENTS 10
 #define NO_OF_SERVICES 2
 
+char *fifo = "fifo";
+int fd;
 char * buf;
-size_t buf_size;
 
 print_error(int val, char* msg){
 	if (val < 0){
@@ -25,16 +26,15 @@ print_error(int val, char* msg){
 
 void init(){
 	buf = (char *)malloc(sizeof(char)*PIPE_BUF);
+	fd = open(fifo, O_WRONLY);
+	print_error(fd, "opening fifo error");
 
 }
 
 int main(){
 	init();
-	printf("This is p5\n");
-	while(1){
-		ssize_t	 r = getline(&buf, &buf_size, stdin);
-		print_error(r, "P5: Read from fifo failed.\n");
-		printf("P5: %s\n", buf);
-		memset(buf, 0, buf_size);
-	}
+	char * msg = "This is FIFO";
+	// sleep(6);
+	write(fd, msg, strlen(msg));
+
 }
