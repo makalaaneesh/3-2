@@ -168,25 +168,66 @@ void * logging(void * arg){
 	char *log_buf = (char *)malloc(sizeof(char)* 100);
 	printf("Polling services\n");
 	int logfd = open("log.txt", O_WRONLY);
-	while(1){
-		// printf("Polling\n");
-		ret = poll(fds, NO_OF_SERVICES, timeout);
-		if(ret > 0){
-			// printf("Event occured\n");
-			for(i= 0; i<NO_OF_SERVICES; i++){
-				if(fds[i].revents & POLLRDNORM){
+	// while(1){
+	// 	// printf("Polling\n");
+	// 	ret = poll(fds, NO_OF_SERVICES, timeout);
+	// 	if(ret > 0){
+	// 		// printf("Event occured\n");
+	// 		for(i= 0; i<NO_OF_SERVICES; i++){
+	// 			if(fds[i].revents & POLLRDNORM){
 
-					int r = read(fds[i].fd, log_buf, PIPE_BUF);
-					// fgets(log_buf, PIPE_BUF, popens[i]);
-					print_error(r,"read failed");
-					printf("LOG[%s]\n", log_buf);
+	// 				int r = read(fds[i].fd, log_buf, PIPE_BUF);
+	// 				// fgets(log_buf, PIPE_BUF, popens[i]);
+	// 				print_error(r,"read failed");
+	// 				printf("LOG[%s]\n", log_buf);
+	// 				fflush(stdout);
+	// 				memset(log_buf, 0, strlen(log_buf));
+	// 			}
+	// 		}
+	// 	}
+	// }
+	char *main_buf = (char *)malloc(sizeof(char)* PIPE_BUF);
+	int max_fd = 0;
+	// int i;
+	for(i=0; i<4;i++){
+		service_fifos[i] = fds[i].fd;
+		if(service_fifos[i] >= max_fd)
+			max_fd = service_fifos[i];
+
+	}
+	max_fd += 1; //the max fd that we give to select statement has to be 1 more than the maximum fd among the entire list.
+
+	printf("Max fd is %d\n", max_fd);
+	// int ret;
+	struct timeval tv;
+	tv.tv_usec = 0;
+	tv.tv_sec = 100;
+	while(1){
+		fd_set rfds;
+		FD_ZERO(&rfds);
+		for(i = 0; i<NO_OF_SERVICES;i++){
+			FD_SET(service_fifos[i], &rfds);
+		}
+		ret = select(max_fd , &rfds, NULL, NULL, &tv);
+		print_error(ret, "Select statement failed");
+		for(i= 0; i<NO_OF_SERVICES; i++){
+			
+			if(FD_ISSET(service_fifos[i], &rfds)){
+				// printf("Reading from %d\n",all_fds[i] );
+				int r = read(service_fifos[i], main_buf, PIPE_BUF);
+				main_buf[strlen(main_buf)]='\0';
+				print_error(r,"read failed");
+				// if(strlen(main_buf) >0)
+					printf("log:%s\n", main_buf);
 					fflush(stdout);
-					memset(log_buf, 0, strlen(log_buf));
-				}
+				memset(main_buf, 0, strlen(main_buf));
+				FD_CLR(service_fifos[i], &rfds);
+
 			}
+
+
 		}
 	}
-	
 
 }
 
