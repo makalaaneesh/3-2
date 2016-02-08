@@ -8,6 +8,8 @@
 #include <limits.h>
 #include <poll.h>
 
+#include <stropts.h>
+
 #define MAX_CLIENTS 10
 char *fifo = "server";
 char *buf;
@@ -87,39 +89,83 @@ int main(int argc, char *argv[]){
 	printf("Server ON.FD is %d\n", fd);
 
 
-	// while(1){
-
-	// 	int r = read(fd, buf, PIPE_BUF);
-	// 	print_error(r, "read failed");
-	// 	process_input(buf);
-
+// POLL
+	// int timeout = 20;
+	// int ret;
+	// struct pollfd fds[no_of_clients];
+	// for(i= 0; i<no_of_clients; i++){
+	// 	fds[i].fd = client_read_fds[i];
+	// 	fds[i].events = POLLRDNORM;
 
 	// }
-	int timeout = 20;
+	// // char *buf = (char *)malloc(sizeof(char)* 100);
+	// printf("Polling services\n");
+	// while(1){
+	// 	// printf("Polling\n");
+	// 	ret = poll(fds, no_of_clients, timeout);
+	// 	if(ret > 0){
+	// 		printf("Event occured\n");
+	// 		for(i= 0; i<no_of_clients; i++){
+	// 			if(fds[i].revents & POLLRDNORM){
+
+	// 				int r = read(fds[i].fd, buf, PIPE_BUF);
+	// 				print_error(r,"read failed");
+	// 				process_input(buf);
+	// 			}
+	// 		}
+	// 	}
+	// }
+
+// POLL END
+
+// SELECT
 	int ret;
-	struct pollfd fds[no_of_clients];
-	for(i= 0; i<no_of_clients; i++){
-		fds[i].fd = client_read_fds[i];
-		fds[i].events = POLLRDNORM;
+	char *main_buf = (char *)malloc(sizeof(char)* PIPE_BUF);
+	int max_fd = 0;
+	// int i;
+	for(i=0; i<no_of_clients;i++){
+		if(client_read_fds[i] >= max_fd)
+			max_fd = client_read_fds[i];
 
 	}
-	// char *buf = (char *)malloc(sizeof(char)* 100);
-	printf("Polling services\n");
-	while(1){
-		// printf("Polling\n");
-		ret = poll(fds, no_of_clients, timeout);
-		if(ret > 0){
-			printf("Event occured\n");
-			for(i= 0; i<no_of_clients; i++){
-				if(fds[i].revents & POLLRDNORM){
+	max_fd += 1; //the max fd that we give to select statement has to be 1 more than the maximum fd among the entire list.
 
-					int r = read(fds[i].fd, buf, PIPE_BUF);
-					print_error(r,"read failed");
-					process_input(buf);
-				}
+	printf("Max fd is %d\n", max_fd);
+	// int ret;
+	struct timeval tv;
+	tv.tv_usec = 0;
+	tv.tv_sec = 0;
+	while(1){
+		fd_set rfds;
+		FD_ZERO(&rfds);
+		for(i = 0; i<no_of_clients;i++){
+			FD_SET(client_read_fds[i], &rfds);
+		}
+		ret = select(max_fd , &rfds, NULL, NULL, &tv);
+		print_error(ret, "Select statement failed");
+		for(i= 0; i<no_of_clients; i++){
+			
+			if(FD_ISSET(client_read_fds[i], &rfds)){
+				// printf("Reading from %d\n",all_fds[i] );
+				int r = read(client_read_fds[i], main_buf, PIPE_BUF);
+				main_buf[strlen(main_buf)]='\0';
+				print_error(r,"read failed");
+				process_input(main_buf);
+				// if(strlen(main_buf) >0)
+					// printf("log:%s\n", main_buf);
+					// fflush(stdout);
+				// memset(main_buf, 0, strlen(main_buf));
+				FD_CLR(client_read_fds[i], &rfds);
+
 			}
+
+
 		}
 	}
+
+
+// SELECT END
+
 
 
 
