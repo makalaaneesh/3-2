@@ -149,7 +149,7 @@ map<string, vector<string> >::iterator it = productions.begin();
                 //cout<<key<<" : ";
                 //print_vector(value);
 		vector<string> f = first(key);
-		cout<<key<<"->";
+		cout<<"first("<<key<<")=";
 		print_vector(f);
 		
         }
@@ -159,5 +159,5 @@ int main(){
 	input();
 	print_map(productions);
 	calculate_first();
-	print_map(productions);
+	// print_map(productions);
 }

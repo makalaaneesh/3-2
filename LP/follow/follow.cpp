@@ -2,14 +2,19 @@
 #include <map>
 #include <vector>
 #include <string.h>
+#include <algorithm>
 
 using namespace std;
 
 
 map<string, vector<string> > productions;
-//map<string, vector<string> >firsts;
-
-map<string, vector<string> > follow_graph;
+map<string, vector<string> >firsts;
+struct node{
+	vector<string> edges;
+	vector<string> follow_list;
+};
+map<string, node> follow_graph;
+string start = "";
 
 
 
@@ -52,6 +57,15 @@ bool exists(string key, map<string, vector<string> > &m){
         }
 }
 
+bool exists(string key, vector<string> v){
+	if(find(v.begin(), v.end(),key)!=v.end()){
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
 void add_to_map(string key, string value, map<string, vector<string> > &m){
         if (exists(key, m)){
                 vector<string> *t = &(m[key]);
@@ -64,9 +78,27 @@ void add_to_map(string key, string value, map<string, vector<string> > &m){
         }
 }
 
+// void add_edge(string left, string right, map<string, node> &m){
+// 	if (exists(left, m)){
+// 			node *n = &(m[key]);
+//             vector<string> *t = &(m[key]);
+//             t->push_back(value);
+// 	}
+//     else{
+//             vector<string> t;
+//             t.push_back(value);
+//             m[key] = t;
+//     }
+// }
+
 vector<string> first(string key){
+
 	vector<string> value = productions[key];
 	vector<string> to_return;
+	if (! isupper(key[0])){
+		to_return.push_back(key);
+		return to_return;
+	}
 	for(int i =0; i<value.size();i++){
 		char c = value[i][0];
 		if( islower(c) ){
@@ -124,29 +156,75 @@ vector<string> first(string key){
 }
 			
 vector<string> follow(string key){
+
+	vector<string> to_return;
+	if (key == start)
+		to_return.push_back("$");
 		map<string, vector<string> >::iterator it = productions.begin();
 	
-        for(it; it != productions.end(); it++)
-        {
-                string key = (*it).first;	
-		vector<string> value = productions[key];
+    for(it; it != productions.end(); it++){
+    	string _key = (*it).first;	
+		vector<string> value = productions[_key];
 		for(int i = 0; i<value.size();i++){
-			for(int j = 0; value[i][j]!='\0'; j++){
+			for(int j = 0; j<value[i].length(); j++){
 				char c = value[i][j];
 				string temp = "";
 				temp = temp + c;
 				if(temp == key){
+					// cout<<_key<<endl;
+					if (j+1 >= value[i].length()){
+						// add_egde(_key, key, follow_graph);
+						if (key != _key){
+							// cout<<"Calling follow for "<<_key<<endl;
+							vector<string> fo = follow(_key);
+							// print_vector(fo);
+							for(int x = 0; x<fo.size(); x++){
+								if(fo[x] != "_")
+									if (!exists(fo[x], to_return))
+										to_return.push_back(fo[x]);
+							}
+						}
+						
+					}
+					else{
+						char next = value[i][j+1];
+						string n = "";
+						n = n + next;
+						vector<string> f = first(n);
+						for(int x = 0; x<f.size(); x++){
+							if(f[x] != "_")
+								if (!exists(f[x], to_return))
+									to_return.push_back(f[x]);
+						}
+						if (exists("_",f)){
+							// add_egde(_key, key, follow_graph);
+
+							if (key != _key){
+							
+							vector<string> fo = follow(_key);
+							// cout<<"Calling follow for "<<_key;
+							// print_vector(fo);
+							for(int x = 0; x<fo.size(); x++){
+								if(fo[x] != "_")
+									if (!exists(fo[x], to_return))
+										to_return.push_back(fo[x]);
+								}
+							}
+						}
+					}
 					/*
  * 						if last char of the string or first(j+1) has Epsillon in it, then graph (key->temp)
  * 						else add first(j+1) to it.
  * 					*/
-	 				}
-	 			}
-			}
+ 				}
+ 			}
 		}
+	}
+	return to_return;
 }
 
 void input(){
+	cin>>start;
 	cout<<"exit to stop ";
 	while(1){
 		string s;
@@ -161,7 +239,8 @@ void input(){
 		add_to_map(s, right, productions);
 	}	
 }
-void calculate_first(){
+void calculate_follow(){
+
 
 map<string, vector<string> >::iterator it = productions.begin();
         for(it; it != productions.end(); it++)
@@ -170,9 +249,12 @@ map<string, vector<string> >::iterator it = productions.begin();
                 //vector<string> value = (*it).second;
                 //cout<<key<<" : ";
                 //print_vector(value);
-		vector<string> f = first(key);
-		cout<<key<<"->";
-		print_vector(f);
+        // if(key == "E"){
+			vector<string> f = follow(key);
+			cout<<"follow("<<key<<")=";
+			print_vector(f);
+			// break;
+		// }	
 		
         }
 }
@@ -180,6 +262,6 @@ map<string, vector<string> >::iterator it = productions.begin();
 int main(){
 	input();
 	print_map(productions);
-	calculate_first();
-	print_map(productions);
+	calculate_follow();
+	// print_map(productions);
 }
