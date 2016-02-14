@@ -11,25 +11,25 @@ int check_bit_right(int val, int pos){// checks the bit if set to 1 or 0. pos st
 		return 0;
 }
 
-int check_bit_left(int val, int pos){// checks the bit if set to 1 or 0. pos starts from left.
-	pos = no_of_bits(val)- pos;
+int check_bit_left(int val, int pos, int len){// checks the bit if set to 1 or 0. pos starts from left.
+	pos = len- pos;
 	if ((val) & (1<<pos))
 		return 1;
 	else
 		return 0;
 }
 
-int set_bit(int *val, int pos){
+int set_bit(int *val, int pos, int len){
 	// printf("setting %d",pos);
-	pos = no_of_bits((*val)) - pos; //accounting for starting indexing from 1.
-	printf("setting %d",pos);
+	pos = len - pos; //accounting for starting indexing from 1.
+	printf("setting %d\n",pos);
 	*val = (*val) | (1<<pos);
 
 }
-int unset_bit(int *val, int pos){
+int unset_bit(int *val, int pos, int len){
 
-	pos = no_of_bits((*val)) - pos; //accounting for starting indexing from 1.
-	printf("unsetting %d",pos);
+	pos = len - pos; //accounting for starting indexing from 1.
+	printf("unsetting %d\n",pos);
 	*val = (*val) & ~(1<<pos);
 	
 }
@@ -54,7 +54,7 @@ void print_binary(int val){
 	printf("No of bits are%d\n", no_of_bits(val));
 	int i;
 	for(i = 1; i <= no_of_bits(val); i++){
-		printf("%d", check_bit_left(val,i));
+		printf("%d", check_bit_left(val,i, no_of_bits(val)));
 
 	}
 	printf("%s\n", "");
@@ -69,15 +69,49 @@ int r(int m){
 	return rval;
 }
 int main(){
+	//taking input in hex
+	char * hex = (char *)malloc(sizeof(char)* 20);
+	scanf("%s", hex);
+	printf("%s\n", hex);
 	int a;
-	scanf("%d",&a);
+	sscanf(hex,"%x",&a);
+	int input_length = no_of_bits(a);
+
 	print_binary(a);
-	printf("%d\n", r(a));
-	// int i;
+	// printf("%d\n", r(a));
 
+	int nbits = no_of_bits(a);
+	int rval = r(nbits);
+	printf("rval is%d\n",rval);
+	int msg = power_2(rval+nbits)- 1;
+	int msg_length = rval+nbits;
+	int i;
+	int p_index = 0;
+	int p;
+	
+	while(1){
+		p = power_2(p_index);
+		if (p >= (msg_length))
+			break;
+		unset_bit(&msg, p,(msg_length));
+		printf("%d\n",p);
+		p_index++;
+	}
+	printf("After setting the parity bits to 0\n");
+	print_binary(msg);
+	int j = 1;
+	for(i = 1; i<= input_length; i++){
+		
+		while(check_bit_left(msg, j,msg_length) == 0)
+			j++;
+		printf("j is %d\n", j);
+		if(check_bit_left(a, i, input_length))
+			set_bit(&msg, j, msg_length);
+		else
+			unset_bit(&msg, j, msg_length);
+		j++;
+	}
+	printf("After setting the input bits\n");
+	print_binary(msg);	
 
-	// for(i = 0; i<10; i++){
-	// 	printf("power of 2 , %d is %d\n", i,power_2(i));
-	// }
-	// printf("%d", check_bit(a,100));
 }
