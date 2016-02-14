@@ -114,4 +114,45 @@ int main(){
 	printf("After setting the input bits\n");
 	print_binary(msg);	
 
+
+	printf("Checking  bit 1 %d\n",check_bit_left(msg,1, msg_length) );
+	p_index = 0;
+	while(1){
+		p = power_2(p_index);
+		if (p > (msg_length))
+			break;
+		printf("p is %d\n", p);
+		int x= p;
+		int c;
+		int count= 0;//count for 1's in bit representaion
+		while(1){
+			// printf("x is %d\n", x);
+			if(x > msg_length)
+				break;
+			for(c = 0; c <p;c++){
+				if(x > msg_length)
+					break;
+				printf("Checking %d\n", x);
+				if (check_bit_left(msg,x, msg_length))
+					count++;
+				x++;
+
+			}
+			for(c = 0; c<p;c++){
+				x++;
+			}
+		}
+		printf("Count for p = %d is %d \n",p, count );
+		if (count %2 != 0){// if odd, need to add 1 to set it for even parity
+			set_bit(&msg, p, msg_length);
+		}
+
+		// unset_bit(&msg, p,(msg_length));
+		// printf("%d\n",p);
+		p_index++;
+	}
+
+	printf("After correcting the parity bits\n");
+	print_binary(msg);	
+
 }
