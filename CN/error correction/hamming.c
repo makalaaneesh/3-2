@@ -51,7 +51,7 @@ int power_2(int e){
 }
 
 void print_binary(int val){
-	printf("No of bits are%d\n", no_of_bits(val));
+	// printf("No of bits are%d\n", no_of_bits(val));
 	int i;
 	for(i = 1; i <= no_of_bits(val); i++){
 		printf("%d", check_bit_left(val,i, no_of_bits(val)));
@@ -154,5 +154,62 @@ int main(){
 
 	printf("After correcting the parity bits\n");
 	print_binary(msg);	
+
+	int e;
+	printf("Enter a sample bit position to change to test for error correction\n");
+	scanf("%d", &e);
+
+	int sample_error = msg;
+	if (check_bit_left(sample_error, e, msg_length))
+		unset_bit(&sample_error, e, msg_length); 
+	else
+		set_bit(&sample_error, e, msg_length); 
+
+	printf("Before correcting error\n");
+	print_binary(sample_error);	
+
+	p_index = 0;
+	int error_index = 0;
+	while(1){
+		p = power_2(p_index);
+		if (p > (msg_length))
+			break;
+		// printf("p is %d\n", p);
+		int x= p;
+		int c;
+		int count= 0;//count for 1's in bit representaion
+		while(1){
+			// printf("x is %d\n", x);
+			if(x > msg_length)
+				break;
+			for(c = 0; c <p;c++){
+				if(x > msg_length)
+					break;
+				// printf("Checking %d\n", x);
+				if (check_bit_left(sample_error,x, msg_length))
+					count++;
+				x++;
+
+			}
+			for(c = 0; c<p;c++){
+				x++;
+			}
+		}
+		// printf("Count for p = %d is %d \n",p, count );
+		if (count %2 != 0){// if odd, need to add 1 to set it for even parity
+			error_index += p;
+		}
+
+		// unset_bit(&msg, p,(msg_length));
+		// printf("%d\n",p);
+		p_index++;
+	}
+	if (check_bit_left(sample_error, error_index, msg_length))
+		unset_bit(&sample_error, error_index, msg_length); 
+	else
+		set_bit(&sample_error, error_index, msg_length);
+	printf("After correcting error\n");
+	print_binary(sample_error);	
+	printf("error index is %d\n", error_index);
 
 }
