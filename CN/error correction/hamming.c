@@ -155,6 +155,9 @@ int main(){
 	printf("After correcting the parity bits\n");
 	print_binary(msg);	
 
+	printf("THis is the hamming code you have to send\n");
+	printf("%x\n", msg);
+
 	int e;
 	printf("Enter a sample bit position to change to test for error correction\n");
 	scanf("%d", &e);
@@ -211,5 +214,7 @@ int main(){
 	printf("After correcting error\n");
 	print_binary(sample_error);	
 	printf("error index is %d\n", error_index);
+
+
 
 }
