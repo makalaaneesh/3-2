@@ -77,7 +77,7 @@ int main(int argc, char *argv[]){
 	listen(sfd, 3);
 
 	printf("%s\n", "Server is listening for connections.");
-	
+
 	//accept connection from incoming client.
 	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
 	print_error(nsfd, "Failed in accepting connection");
@@ -88,6 +88,8 @@ int main(int argc, char *argv[]){
 	int read_size;
 	while( (read_size = recv(nsfd, buffer, 256, 0)) > 0){
 		printf("Message:%s\n", buffer);
+		int s = send(nsfd, buffer, sizeof(buffer), 0);
+		print_error(s, "Failed to send message to client");
 		memset(buffer, 0, 256);
 	}
 
