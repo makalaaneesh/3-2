@@ -159,8 +159,9 @@ int main(){
 	printf("%x\n", msg);
 
 	int e;
-	printf("Enter a sample bit position to change to test for error correction\n");
-	scanf("%d", &e);
+	// printf("Enter a sample bit position to change to test for error correction\n");
+	// scanf("%d", &e);
+	e = 7;
 
 	int sample_error = msg;
 	if (check_bit_left(sample_error, e, msg_length))
