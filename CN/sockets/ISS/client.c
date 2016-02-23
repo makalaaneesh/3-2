@@ -94,7 +94,7 @@ int main(int argc, char *argv[]){
 	// memset(buffer1, 0, 256);
 
 	while(1){
-		// printf("Enter word to convert \n");
+		printf("Enter word to convert \n");
 		ssize_t in  = getline(&buffer, &write_size, stdin);
 		// fgets(buffer,256,stdin);
 		// gets(buffer);
@@ -109,9 +109,9 @@ int main(int argc, char *argv[]){
 		print_error(s, "Failed to send message to server");
 
 		//receive a reply from the server
-		int r = recv(sfd, buffer1, 256,0);
-		print_error(r, "Failed to receive a reply from the server");
-		printf("Server:%s", buffer1);
+		// int r = recv(sfd, buffer1, 256,0);
+		// print_error(r, "Failed to receive a reply from the server");
+		// printf("Server:%s", buffer1);
 		memset(buffer, 0, 256);
 		memset(buffer1, 0, 256);
 	}

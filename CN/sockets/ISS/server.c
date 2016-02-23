@@ -152,12 +152,14 @@ void *wait_for_incoming_connections(void * arg){
 				printf("Accepted connection from %d\n", inet_ntoa(client_addr.sin_addr));
 
 				
-
+				int pfd[2];
+				pipe(pfd);
 
 				int pid = fork();
 				print_error(pid, "fork failed");
 
 				if (pid == 0){//child
+					close(pfd[0]); //closing the reading end
 					// int r = recv(nsfd, buffer, 256, 0);
 					// print_error(r, "Read failed");
 					close(services[i].sfd);
@@ -170,9 +172,9 @@ void *wait_for_incoming_connections(void * arg){
 
 					}
 					// printf("2-%d\n", nsfd);
-					if(nsfd != STDOUT){
+					if(pfd[1] != STDOUT){
 						printf("Duping output\n");
-						if(dup2(nsfd, STDOUT)!= STDOUT){
+						if(dup2(pfd[1], STDOUT)!= STDOUT){
 							print_error(-1, "Failed to dup2 stdout");
 						}
 
@@ -198,6 +200,9 @@ void *wait_for_incoming_connections(void * arg){
 				else{
 					
 					close(nsfd);
+					close(pfd[1]); //closing the writing end
+					service_read_fds[service_read_fds_index++] = pfd[0];
+					print_read_fds();
 
 				}
 
@@ -237,6 +242,13 @@ void *read_from_services(void *arg){
 		for(i = 0; i<service_read_fds_index;i++){
 			FD_SET(service_read_fds[i], &rfds);
 		}
+		for(i=0; i<service_read_fds_index;i++){
+			if(service_read_fds[i] >= max_fd)
+					max_fd = service_read_fds[i];
+
+		}
+		max_fd += 1;
+		// printf("max fd at the reading end is %d\n", max_fd);
 		ret = select(max_fd , &rfds, NULL, NULL, &tv);
 		print_error(ret, "Select statement failed at reading from fds.");
 		for(i= 0; i<service_read_fds_index; i++){
@@ -264,10 +276,10 @@ int main(int argc, char *argv[]){
 	server_init();
 	pthread_t services, clients;
 	pthread_create(&clients, NULL, wait_for_incoming_connections, (void*)0);
-	// pthread_create(&services, NULL, read_from_services, (void*)0);
+	pthread_create(&services, NULL, read_from_services, (void*)0);
 
 
-	// pthread_join(services);
+	pthread_join(services);
 	pthread_join(clients);
 
 	printf("Exiting\n");
