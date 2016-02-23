@@ -31,7 +31,7 @@ struct sockaddr_in
 */
 
 struct service{
-	char name[10];
+	char *name;
 	int port;
 	int sfd;
 }services[MAX_SERVICES];
@@ -60,6 +60,9 @@ void server_init(){
 	services[0].port = 9997;
 	services[1].port = 9998;
 	services[2].port = 9999;
+	services[0].name = (char*)malloc(sizeof(char)*20);
+	services[1].name = (char*)malloc(sizeof(char)*20);
+	services[2].name = (char*)malloc(sizeof(char)*20);
 	strcpy(services[0].name, "upper");
 	strcpy(services[1].name, "lower");
 	strcpy(services[2].name, "return");
@@ -148,55 +151,57 @@ void *wait_for_incoming_connections(void * arg){
 				print_error(nsfd, "Failed in accepting connection");
 				printf("Accepted connection from %d\n", inet_ntoa(client_addr.sin_addr));
 
-		
-				int pfd[2];
-				pipe(pfd);
+				
+
 
 				int pid = fork();
 				print_error(pid, "fork failed");
 
 				if (pid == 0){//child
-					close(pfd[0]); //closing reading end.
-					int i; 
-					// for(i = 0; i< MAX_SERVICES; i++){
-					// 	close(services[i].sfd);
-					// }
-
+					// int r = recv(nsfd, buffer, 256, 0);
+					// print_error(r, "Read failed");
+					close(services[i].sfd);
+					// printf("1-%d\n", nsfd);
 					if(nsfd != STDIN){
 						printf("Duping input\n");
 						if(dup2(nsfd, STDIN)!= STDIN){
 							print_error(-1, "Failed to dup2 stdin");
 						}
-						close(nsfd);
+
 					}
 					// printf("2-%d\n", nsfd);
-					if(pfd[1] != STDOUT){
+					if(nsfd != STDOUT){
 						printf("Duping output\n");
-						if(dup2(pfd[1], STDOUT)!= STDOUT){
+						if(dup2(nsfd, STDOUT)!= STDOUT){
 							print_error(-1, "Failed to dup2 stdout");
 						}
-						close(pfd[1]);
-					}
-					
 
+					}
+					close(nsfd);
+					// printf("3-%d\n", nsfd);
+					// fflush(stdout);
+					// close(nsfd);
 					// printf("Starting service %s\n", buffer);
 					// fflush(stdout);
 					
-
 					execl(services[i].name, services[i].name, (char*)0);
+					// int read_size;
+					// while( (read_size = recv(nsfd, buffer, 256, 0)) > 0){
+					// 	printf("Message:%s\n", buffer);
+					// 	int s = send(nsfd, buffer, sizeof(buffer), 0);
+					// 	print_error(s, "Failed to send message to client");
+					// 	memset(buffer, 0, 256);
+					// }
 		                   
 
 				}
 				else{
 					
 					close(nsfd);
-					close(pfd[1]);
-					service_read_fds[service_read_fds_index++] = pfd[0];
-					print_read_fds();
-					
+
 				}
 
-				FD_CLR(services[i].sfd, &rfds);
+				// FD_CLR(services[i].sfd, &rfds);
 
 			}
 
@@ -259,10 +264,10 @@ int main(int argc, char *argv[]){
 	server_init();
 	pthread_t services, clients;
 	pthread_create(&clients, NULL, wait_for_incoming_connections, (void*)0);
-	pthread_create(&services, NULL, read_from_services, (void*)0);
+	// pthread_create(&services, NULL, read_from_services, (void*)0);
 
 
-	pthread_join(services);
+	// pthread_join(services);
 	pthread_join(clients);
 
 	printf("Exiting\n");

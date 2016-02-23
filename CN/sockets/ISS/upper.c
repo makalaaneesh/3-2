@@ -7,6 +7,8 @@
 
 int main(){
 
+	// printf("Starting upper\n");
+	// fflush(stdout);
 	char *str  = (char *)malloc(sizeof(char)*250);
 	size_t write_size;
 

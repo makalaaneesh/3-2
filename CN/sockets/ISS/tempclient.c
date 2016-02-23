@@ -7,7 +7,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
-#define PORT 9998
+#define PORT 9997
 
 /*
 
@@ -39,9 +39,7 @@ int main(int argc, char *argv[]){
 	int port; //port on which server runs
 	int client_addr_len; // var to store len of the address of client. 
 	char *buffer, buffer1[256];
-	char *service = argv[1];
 	buffer = (char *)malloc(sizeof(char)*100);
-
 	struct sockaddr_in server_addr;
 
 	// creating a socket
@@ -67,15 +65,6 @@ int main(int argc, char *argv[]){
 	// reading from stdin and sending to server.
 	size_t write_size;
 	int read_size;
-
-	// int s = send(sfd, service, sizeof(service), 0);
-	// print_error(s, "Failed to send initial message to server");
-	// int r = recv(sfd, buffer1, 256, 0);
-	// print_error(r, "Failed to receive a reply from the server");
-	// printf("Server:%s\n", buffer1);
-	// memset(buffer, 0, 256);
-	// memset(buffer1, 0, 256);
-
 	while(1){
 		// printf("Enter word to convert \n");
 		ssize_t in  = getline(&buffer, &write_size, stdin);
@@ -92,9 +81,9 @@ int main(int argc, char *argv[]){
 		print_error(s, "Failed to send message to server");
 
 		//receive a reply from the server
-		int r = recv(sfd, buffer1, 256,0);
-		print_error(r, "Failed to receive a reply from the server");
-		printf("Server:%s", buffer1);
+		// int r = recv(sfd, buffer1, 256,0);
+		// print_error(r, "Failed to receive a reply from the server");
+		// printf("Server:%s", buffer1);
 		memset(buffer, 0, 256);
 		memset(buffer1, 0, 256);
 	}
