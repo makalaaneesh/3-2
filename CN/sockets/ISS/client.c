@@ -7,10 +7,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
-#define PORT 9998
+#define LOWER_PORT 9998
+#define UPPER_PORT 9997
+#define ECHO_PORT 9999
 
 /*
-
+ 
 struct sockaddr_in
 {
   short   sin_family; //must be AF_INET 
@@ -37,9 +39,24 @@ int main(int argc, char *argv[]){
 
 
 	int port; //port on which server runs
+	if (argc <= 1){
+		printf("service required(lower/upper/return)\n");
+		exit(1);
+	}
+
+
 	int client_addr_len; // var to store len of the address of client. 
 	char *buffer, buffer1[256];
 	char *service = argv[1];
+	if(strcmp(service,"upper") == 0){
+		port = UPPER_PORT;
+	}
+	else if(strcmp(service,"lower") == 0){
+		port = LOWER_PORT;
+	}
+	else{
+		port = ECHO_PORT;
+	}
 	buffer = (char *)malloc(sizeof(char)*100);
 
 	struct sockaddr_in server_addr;
@@ -53,7 +70,7 @@ int main(int argc, char *argv[]){
 
 	// port = atoi(argv[1]);
 	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(PORT);
+	server_addr.sin_port = htons(port);
 	//Computer networks are big endian. This means that when little endian computers are going to pass integers over the network (IP addresses for example), they need to convert them to network byte order. Likewise, when the receive integer values over the network, they need to convert them back to their own native representation.
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 

@@ -65,7 +65,7 @@ void server_init(){
 	services[2].name = (char*)malloc(sizeof(char)*20);
 	strcpy(services[0].name, "upper");
 	strcpy(services[1].name, "lower");
-	strcpy(services[2].name, "return");
+	strcpy(services[2].name, "echo");
 	// services[0].name = "upper";
 	// services[1].name = "lower";
 	// services[2].name = "return";
