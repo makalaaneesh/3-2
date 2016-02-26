@@ -1,0 +1,7 @@
+S
+abNd
+S
+abNe
+S
+abD
+exit
