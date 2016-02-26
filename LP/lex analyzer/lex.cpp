@@ -128,12 +128,12 @@ void line(string arr){
 	string delim=" ";
 	cout<<arr;
 	cout<<"\nGetting tokens in line\n";
-	gettokens(arr,tokens,delim);
-	addtodict();
-	addtodictspl();
+	gettokens(arr,tokens,delim);;
 	for(int i=0;i<tokens.size();i++)
 	{
-		cout<<tokens[i];
+		if(tokens[i] == "")
+			continue;
+		cout<<"["<<tokens[i]<<"]";
 		if(ispreprocessor(tokens[i]))
 			cout<<": it is a preprocessor\t";
 		else if(iskeyword(tokens[i]))
@@ -154,6 +154,9 @@ void line(string arr){
 	cout<<endl;
 }
 int main(int argc, char *argv[]){
+
+	addtodict();
+	addtodictspl();
 	fstream f;
 	f.open(argv[1],ios::in);
 	while(!f.eof()){
