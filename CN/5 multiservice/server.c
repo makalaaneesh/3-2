@@ -75,10 +75,6 @@ void process_input(char *input){
     		// int in = client_fifo_fd;
     		int out = client_fifo_fd;
 
-	  //   	if (in != 0){
-			// 	dup2(in, 0);
-			// 	close(in);
-			// } // child will read from the pipe of the previous process (int in)
 
 			if (out != 1){
 				dup2(out,1);
