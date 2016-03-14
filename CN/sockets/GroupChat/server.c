@@ -42,6 +42,44 @@ struct service{
 	int started;
 }services[MAX_SERVICES];
 
+void get_peer_ip(int sf){
+	socklen_t len;
+	struct sockaddr_storage addr;
+	char ipstr[INET6_ADDRSTRLEN];
+	int port;
+
+	len = sizeof addr;
+	getpeername(sf, (struct sockaddr*)&addr, &len);
+
+	    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+	    port = ntohs(s->sin_port);
+	    inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+
+	// printf("Peer IP address: %s\n", ipstr);
+	char ip_port[100];
+	sprintf(ip_port, "Connected peer is ->>>>>> %s:%d", ipstr, port);
+	printf("%s\n", ip_port);
+}
+
+void get_my_ip(int sf){
+	socklen_t len;
+	struct sockaddr_storage addr;
+	char ipstr[INET6_ADDRSTRLEN];
+	int port;
+
+	len = sizeof addr;
+	getsockname(sf, (struct sockaddr*)&addr, &len);
+
+	    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+	    port = ntohs(s->sin_port);
+	    inet_ntop(AF_INET, &s->sin_addr, ipstr, sizeof ipstr);
+
+	// printf("Peer IP address: %s\n", ipstr);
+	char ip_port[100];
+	sprintf(ip_port, "My socket address is ->>>>>> %s:%d", ipstr, port);
+	printf("%s\n", ip_port);
+}
+
 
 int get_service_index(char * service_name){
 	int i;
@@ -148,7 +186,9 @@ void *wait_for_incoming_connections(void * arg){
 			//accept a call
 			nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
 			print_error(nsfd, "Failed in accepting connectionn");
-			printf("Accepted connection from %d\n", inet_ntoa(client_addr.sin_addr));
+			get_my_ip(sfd);
+			get_peer_ip(nsfd);
+			printf("Accepted connection from peer-%d\n", inet_ntoa(client_addr.sin_addr));
 
 			
 			int r = recv(nsfd, readbuffer, 100 ,0);

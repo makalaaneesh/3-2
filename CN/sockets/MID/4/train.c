@@ -10,7 +10,7 @@
 // #define LOWER_PORT 9998
 // #define UPPER_PORT 9997
 // #define ECHO_PORT 9999
-#define SERVER_FAMOUS_PORT 10000
+#define TRAIN_PORT 9998
 
 
 /*
@@ -67,9 +67,6 @@ int service_port;
 int service_sfd;
 
 
-void *receive_from_group(void * arg){
-
-}
 
 
 void print_error(int val, char*msg){
@@ -79,33 +76,18 @@ void print_error(int val, char*msg){
 	}
 }
 
-void * reading_thread(void * arg){
-	char *read_buf;
-	read_buf = (char *)malloc(sizeof(char)*100);
-	while(1){
-
-		int r = read(service_sfd, read_buf, 100);
-		print_error(r, "read failed");
-		if (r >0)
-			printf("Server->%s", read_buf);
-
-		fflush(stdout);
-		memset(read_buf, 0, strlen(read_buf));
-
-	}
-	close(service_sfd);
-}
 
 
 int main(int argc, char *argv[]){
 
 
 	int port; //port on which server runs
-	port = SERVER_FAMOUS_PORT;
-	if (argc <= 1){
-		printf("group id required.\n");
-		exit(1);
-	}
+	port = TRAIN_PORT;
+	printf("port is %d\n", port);
+	// if (argc <= 1){
+	// 	printf("group id required.\n");
+	// 	exit(1);
+	// }
 
 
 	int client_addr_len; // var to store len of the address of client. 
@@ -131,22 +113,27 @@ int main(int argc, char *argv[]){
 
 	// establishing the connection to server.
 	int c = connect(sfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	get_my_ip(sfd);
-	get_peer_ip(sfd);
-	print_error(c, "could not connect to server.");
+	// get_my_ip(sfd);
+	// get_peer_ip(sfd);
+	print_error(c, "could not connect to station");
 
-	printf("%s\n", "connected to main server");
+	printf("%s\n", "connected to station");
 
 
 	// reading from stdin and sending to server.
 	size_t write_size;
 	int read_size;
 
-	int s = send(sfd, service, sizeof(service), 0);
-	print_error(s, "Failed to send initial message to server");
+	sleep(2);
+	int s;
+	printf("Waiting for reply from the station\n");
+	fflush(stdout);
+	// int s = send(sfd, service, sizeof(service), 0);
+	// print_error(s, "Failed to send initial message to server");
 	int r = recv(sfd, buffer1, 256, 0);
 	print_error(r, "Failed to receive a reply from the server");
-	printf("Server:%s\n", buffer1);
+	printf("Station:[%s]\n", buffer1);
+	fflush(stdout);
 
 	int service_port = atoi(buffer1);
 	if(service_port == 0){
@@ -165,39 +152,53 @@ int main(int argc, char *argv[]){
 
 	server_addr.sin_port = htons(service_port);
 	c = connect(nsfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	print_error(c, "could not connect to service.");
-	printf("%s\n", "Connected to service");
-	service_sfd = nsfd;
-	pthread_t t;
-	pthread_create(&t, NULL, reading_thread, (void*)0);
+	print_error(c, "could not connect to platform.");
+	printf("%s\n", "Connected to platofrm");
+	// service_sfd = nsfd;
 
 
-	while(1){
-		printf("Enter message to send to group \n");
-		ssize_t in  = getline(&buffer, &write_size, stdin);
-		// fgets(buffer,256,stdin);
-		// gets(buffer);
-		// scanf("%s",buffer);
-		print_error(in, "Failed to read from stdin");
-		if(strcmp(buffer, "exit") == 0)
-			exit(1);
 
-		// printf("Sending:[%s]\n", buffer);
-		fflush(stdout);
-		int s = send(nsfd, buffer, strlen(buffer), 0);
-		print_error(s, "Failed to send message to server");
+	sprintf(buffer, "%s", "Compartment Details!");
+	s = send(nsfd, buffer, strlen(buffer), 0);
+	print_error(s, "Failed to send message to server");
 
-		//receive a reply from the server
-		// int r = recv(nsfd, buffer1, 256,0);
-		// print_error(r, "Failed to receive a reply from the server");
-		// printf("Server:%s", buffer1);
-		memset(buffer, 0, 256);
-		memset(buffer1, 0, 256);
-	}
+	sleep(5);// train is arriving.
+
+	// train is leaving
+	sprintf(buffer, "%s", "exit");
+	s = send(nsfd, buffer, strlen(buffer), 0);
+	print_error(s, "Failed to send message to server");
 
 
-	printf("Client disconnected\n");
+
+	// while(1){
+	// 	printf("Enter message to send to group \n");
+	// 	ssize_t in  = getline(&buffer, &write_size, stdin);
+	// 	// fgets(buffer,256,stdin);
+	// 	// gets(buffer);
+	// 	// scanf("%s",buffer);
+	// 	print_error(in, "Failed to read from stdin");
+	// 	if(strcmp(buffer, "exit") == 0)
+	// 		exit(1);
+
+	// 	// printf("Sending:[%s]\n", buffer);
+	// 	fflush(stdout);
+	// 	int s = send(nsfd, buffer, strlen(buffer), 0);
+	// 	print_error(s, "Failed to send message to server");
+
+	// 	//receive a reply from the server
+	// 	// int r = recv(nsfd, buffer1, 256,0);
+	// 	// print_error(r, "Failed to receive a reply from the server");
+	// 	// printf("Server:%s", buffer1);
+	// 	memset(buffer, 0, 256);
+	// 	memset(buffer1, 0, 256);
+	// }
+
+
+	printf("Train leaving disconnected\n");
 	fflush(stdout);
+	sleep(5);
+	close(nsfd);
 	return 0;
 
 }
