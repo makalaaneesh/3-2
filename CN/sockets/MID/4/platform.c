@@ -11,12 +11,12 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <limits.h>
-
 #include <stropts.h>
 
+#include "../../../helper.h"
 
 
-
+#define SHMTOKEN 123123
 
 int pno;
 
@@ -44,9 +44,22 @@ void * reading_thread(void * arg){
 
 }
 
+int *platform_pid;
 
+void init(){
+	int shmid;
+	shmid = allocateSharedMemory(sizeof(int), SHMTOKEN);
+   	platform_pid = (int *) mapSharedMemory(shmid);
+}
+
+void signal_station(){
+	int ppid = getppid();
+	*platform_pid = getpid();
+	kill(ppid, SIGUSR1);
+}
 
 int main(int argc, char *argv[]){
+	init();
 	pthread_t t;
 	pthread_create(&t, NULL, reading_thread, (void*)0);
 
@@ -97,10 +110,13 @@ int main(int argc, char *argv[]){
 		//receive info from train directly until the train sends an "exit" message indicating that it is leaving.
 		while(1){
 			int r = recv(nsfd, readbuffer, 100 ,0);
+			if(r <= 0)
+				continue;
 			print_error(r, "Failed to receive a message from the client");
 			printf("[%d](%s)\n",pno, readbuffer);
 			if (strcmp(readbuffer, "exit") == 0){
 				close(nsfd);
+				signal_station();
 				//signal that platform is now free!!
 
 				break;

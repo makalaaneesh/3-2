@@ -14,9 +14,14 @@
 #include <limits.h>
 
 #include <stropts.h>
+#include "../../../helper.h"
 
 #define PORTS 3
 #define PLATFORMS 2
+#define SHMTOKEN 123123
+
+int *platform_pid;
+
 
 struct train{
 	int train_no;
@@ -40,7 +45,30 @@ void print_error(int val, char*msg){
 struct platform platforms[2] = { {1,1,0,10001,0}, {2,1,0,10002,0} };
 struct train trains[PORTS] = { {1, 9997,0}, {2, 9998,0}, {3, 9999,0} };// corresponding to V, D, H
 
+
+void train_leaving_signal(int signo){
+	int plat_pid = *platform_pid;
+	int index = -1;
+	int i;
+	for(i = 0; i< PLATFORMS; i++){
+		if (plat_pid == platforms[i].pid){
+			index = i;
+			break;
+		}
+	}
+	print_error(index, "No such platform exists!!!");
+	printf("Train leaving from platform %d\n", platforms[index].pno);
+	platforms[index].is_free = 1;
+}
+
+
 void init_platforms(){
+	if(signal(SIGUSR1, train_leaving_signal) == SIG_ERR){
+		printf("%s\n", "Error in catching SIGUSR1");
+  	}
+	int shmid;
+	shmid = allocateSharedMemory(sizeof(int), SHMTOKEN);
+   	platform_pid = (int *) mapSharedMemory(shmid);
 	int i;
 	for (i = 0; i< PLATFORMS; i++){
 		int pipefd[2];
@@ -115,12 +143,12 @@ void wait_for_incoming_connections(){
 		for(i = 0; i<PORTS;i++){
 			FD_SET(trains[i].sfd, &rfds);
 		}
-		ret = select(max_fd , &rfds, NULL, NULL, &tv);
-		print_error(ret, "Select statement failed at accept");
+		ret = select(max_fd , &rfds, NULL, NULL, NULL);
+		print_error(ret, "Select statement failed!");
 		for(i= 0; i<PORTS; i++){
 			
 			if(FD_ISSET(trains[i].sfd, &rfds)){
-				printf("About to accept connection %d\n",i);
+				// printf("About to accept connection %d\n",i);
 				//accept a call if a free platform is available;
 				int free_platform_index = -1;
 				int x;
@@ -131,7 +159,7 @@ void wait_for_incoming_connections(){
 					}
 				}
 				if (free_platform_index == -1){
-					printf("No free platforms available\n");
+					// printf("No free platforms available\n");
 					continue;
 				}
 				// free platform is available. accept.
