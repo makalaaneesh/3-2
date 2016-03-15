@@ -7,11 +7,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <signal.h>
+#include <poll.h>
 #include <string.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <limits.h>
+#include <errno.h>
+#include <error.h>
 
 #include <stropts.h>
 #include "../../../helper.h"
@@ -47,6 +50,7 @@ struct train trains[PORTS] = { {1, 9997,0}, {2, 9998,0}, {3, 9999,0} };// corres
 
 
 void train_leaving_signal(int signo){
+	printf("Train has left\n");
 	int plat_pid = *platform_pid;
 	int index = -1;
 	int i;
@@ -123,11 +127,11 @@ void wait_for_incoming_connections(){
 	struct sockaddr_in client_addr;
 	int client_addr_len;
 	int i;
-	for(i=0; i<PORTS;i++){
-		if(trains[i].sfd >= max_fd)
-			max_fd = trains[i].sfd;
+	// for(i=0; i<PORTS;i++){
+	// 	if(trains[i].sfd >= max_fd)
+	// 		max_fd = trains[i].sfd;
 
-	}
+	// }
 	max_fd += 1; //the max fd that we give to select statement has to be 1 more than the maximum fd among the entire list.
 
 	printf("Max fd is %d\n", max_fd);
@@ -137,17 +141,32 @@ void wait_for_incoming_connections(){
 	tv.tv_usec = 0;
 	tv.tv_sec = 0;
 	int nsfd;
+	int poll_max = PORTS;
+	int timeout = 0;
+	struct pollfd fds[PORTS];
+	for(i = 0; i< PORTS; i++){
+		fds[i].fd = trains[i].sfd;
+		fds[i].events = POLLRDNORM;
+
+	}
 	while(1){
-		fd_set rfds;
-		FD_ZERO(&rfds);
-		for(i = 0; i<PORTS;i++){
-			FD_SET(trains[i].sfd, &rfds);
+		// fd_set rfds;
+		// FD_ZERO(&rfds);
+		// for(i = 0; i<PORTS;i++){
+		// 	FD_SET(trains[i].sfd, &rfds);
+		// }
+		// ret = select(max_fd , &rfds, NULL, NULL, NULL);
+		ret = poll(fds, poll_max, timeout);
+		if ( errno  == EINTR ){
+			printf("interrupted. Continuing.\n");
+			errno = 0;
+			continue;
 		}
-		ret = select(max_fd , &rfds, NULL, NULL, NULL);
-		print_error(ret, "Select statement failed!");
+		print_error(ret, "Poll statement failed!");
 		for(i= 0; i<PORTS; i++){
 			
-			if(FD_ISSET(trains[i].sfd, &rfds)){
+			// if(FD_ISSET(trains[i].sfd, &rfds)){
+			if ((fds[i].revents & POLLRDNORM)){
 				// printf("About to accept connection %d\n",i);
 				//accept a call if a free platform is available;
 				int free_platform_index = -1;

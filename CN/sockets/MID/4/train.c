@@ -162,7 +162,7 @@ int main(int argc, char *argv[]){
 	s = send(nsfd, buffer, strlen(buffer), 0);
 	print_error(s, "Failed to send message to server");
 
-	sleep(5);// train is arriving.
+	sleep(2);// train is arriving.
 
 	// train is leaving
 	sprintf(buffer, "%s", "exit");

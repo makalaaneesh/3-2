@@ -55,6 +55,8 @@ void init(){
 void signal_station(){
 	int ppid = getppid();
 	*platform_pid = getpid();
+	printf("%d\n", getpid());
+	printf("%d\n", *(platform_pid));
 	kill(ppid, SIGUSR1);
 }
 
