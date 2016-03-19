@@ -17,13 +17,16 @@
 #include <sys/types.h>
 #include <limits.h>
 #include <sys/time.h>
+#include <sys/un.h>
 #include <stropts.h>
 #include <poll.h>
+
 
 #define CONTROLLEN  CMSG_LEN(sizeof(int))
 #define READ_ARRAY 1
 #define WRITE_ARRAY 2
 #define EXCEPT_ARRAY 3
+#define SOCKET_PATH "./unix.sock"
 
 
 struct select_fds{
@@ -94,10 +97,10 @@ int s_socket(int domain, int type ,int port){
 		is_server = 0;
 
 	int sfd;
-	int client_addr_len; // var to store len of the address of client. 
+
 	char buffer[256];
 
-	struct sockaddr_in server_addr;
+	
 	
 	sfd = socket(domain, type, 0);
 	print_error(sfd, "error opening socket");
@@ -107,19 +110,39 @@ int s_socket(int domain, int type ,int port){
 	print_error(set, "setsockopt(SO_REUSEADDR) failed");
 
 	if (is_server){
-		// port = atoi(argv[1]);
-		server_addr.sin_family = domain;
-		server_addr.sin_port = htons(port);
-		//Computer networks are big endian. This means that when little endian computers are going to pass integers over the network (IP addresses for example), they need to convert them to network byte order. Likewise, when the receive integer values over the network, they need to convert them back to their own native representation.
-		server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-		//binding the socket to the addr
-		int b = bind(sfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-		print_error(b, "Failed to bind.");
+		if (domain == AF_INET){
+			struct sockaddr_in server_addr;
+			// port = atoi(argv[1]);
+			server_addr.sin_family = domain;
+			server_addr.sin_port = htons(port);
+			//Computer networks are big endian. This means that when little endian computers are going to pass integers over the network (IP addresses for example), they need to convert them to network byte order. Likewise, when the receive integer values over the network, they need to convert them back to their own native representation.
+			server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
-		listen(sfd, 3);
+			//binding the socket to the addr
+			int b = bind(sfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+			print_error(b, "Failed to bind.");
 
-		printf("%s\n", "Server is listening for connections.");
+			listen(sfd, 3);
+
+			printf("%s\n", "Server is listening for connections.");
+		}
+		else if (domain == AF_UNIX || domain == AF_LOCAL){
+			struct sockaddr_un addr;
+			memset(&addr, 0, sizeof(addr));
+			addr.sun_family = AF_LOCAL;
+			unlink(SOCKET_PATH);
+			strcpy(addr.sun_path, SOCKET_PATH);
+
+			int b = bind(sfd, (struct sockaddr *)&addr, sizeof(addr));
+			print_error(b, "Failed to bind.");
+
+			listen(sfd, 3);
+
+			printf("%s\n", "Server is listening for connections.");
+
+
+		}
 	}
 	return sfd;
 
@@ -133,23 +156,36 @@ int _accept(int sfd){
 	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
 	print_error(nsfd, "Failed in accepting connection");
 	printf("Accepted connection.\n");
-	get_peer_ip(nsfd);
+	// get_peer_ip(nsfd);
 	return nsfd;
 }
 
 
-int _connect(int sfd, int domain, int type, int port){
-	struct sockaddr_in server_addr;
-	// port = atoi(argv[1]);
-	server_addr.sin_family = domain;
-	server_addr.sin_port = htons(port);
-	//Computer networks are big endian. This means that when little endian computers are going to pass integers over the network (IP addresses for example), they need to convert them to network byte order. Likewise, when the receive integer values over the network, they need to convert them back to their own native representation.
-	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+void _connect(int sfd, int domain, int type, int port){
+	int is_AF_INET = 1;
+	if(port == 0)
+		is_AF_INET = 0;
 
-
-	int c = connect(sfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	print_error(c, "could not connect to server.");
-	printf("%s\n", "connected to server");
+	if(is_AF_INET){
+		struct sockaddr_in server_addr;
+		// port = atoi(argv[1]);
+		server_addr.sin_family = domain;
+		server_addr.sin_port = htons(port);
+		//Computer networks are big endian. This means that when little endian computers are going to pass integers over the network (IP addresses for example), they need to convert them to network byte order. Likewise, when the receive integer values over the network, they need to convert them back to their own native representation.
+		server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+		int c = connect(sfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+		print_error(c, "could not connect to server.");
+		printf("%s\n", "connected to server");
+	}
+	else {
+		struct sockaddr_un addr;
+		memset(&addr, 0, sizeof(addr));
+		addr.sun_family = AF_LOCAL;
+		strcpy(addr.sun_path, SOCKET_PATH);
+		int c = connect(sfd, (struct sockaddr *)&addr, sizeof(addr));
+		print_error(c, "could not connect to server.");
+		printf("%s\n", "connected to server");
+	}
 }
 
 void * reading_thread(void * arg){
@@ -263,8 +299,8 @@ int send_fd(int sfd, int fd_to_send){
 int recv_fd(int sfd){
 	int nr, newfd, status;
 	char *ptr;
-	char buf[MAXLINE];
-	srtuct iovec iov[1];
+	char buf[1024];
+	struct iovec iov[1];
 	struct msghdr msg;
 	struct cmsghdr * cmptr = (struct cmsghdr *)malloc(sizeof(struct cmsghdr));
 
@@ -279,7 +315,7 @@ int recv_fd(int sfd){
 	msg.msg_control = cmptr;
 	msg.msg_controllen = CONTROLLEN;
 
-	int nr = recvmsg(sfd, &msg, 0);
+	nr = recvmsg(sfd, &msg, 0);
 	print_error(nr, "Failed to recive fd");
 
 
