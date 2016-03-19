@@ -163,7 +163,9 @@ vector<string> first(string key, vector<string> value){
 				}
 			}
 			if(added == 0 && j<value.size() && islower(value[i][j])){
+
 				char c = value[i][j];
+				cout<<"andasdnasdasd"<<c;
 				string temp = "";
 				temp = temp +c;
 				to_return.push_back(temp);
