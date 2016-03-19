@@ -8,7 +8,7 @@ int usfd;
 int nsfd;
 int fd;
 void init(){
-	usfd = s_socket(AF_LOCAL, SOCK_STREAM, 9999);
+	usfd = s_socket(AF_LOCAL, SOCK_STREAM, 9999, "unix.sock");
 	nsfd = _accept(usfd);
 }
 

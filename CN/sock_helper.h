@@ -84,11 +84,11 @@ void get_my_ip(int sf){
 
 
 // socket call for a client
-int c_socket(int domain, int type){
-	s_socket(domain, type, 0); // to indicate that client has made the call.
+int c_socket(int domain, int type, char*path){
+	s_socket(domain, type, 0 , ""); // to indicate that client has made the call.
 }
 
-int s_socket(int domain, int type ,int port){
+int s_socket(int domain, int type ,int port, char *path){
 	// domain - AF_INET, AF_UNIX
 	// type - SOCK_STREAM, SOCK_DGRAM
 
@@ -125,21 +125,21 @@ int s_socket(int domain, int type ,int port){
 
 			listen(sfd, 3);
 
-			printf("%s\n", "Server is listening for connections.");
+			printf("%s%d\n", "Server is listening for connections at port ",  port);
 		}
 		else if (domain == AF_UNIX || domain == AF_LOCAL){
 			struct sockaddr_un addr;
 			memset(&addr, 0, sizeof(addr));
 			addr.sun_family = AF_LOCAL;
-			unlink(SOCKET_PATH);
-			strcpy(addr.sun_path, SOCKET_PATH);
+			unlink(path);
+			strcpy(addr.sun_path, path);
 
 			int b = bind(sfd, (struct sockaddr *)&addr, sizeof(addr));
 			print_error(b, "Failed to bind.");
 
 			listen(sfd, 3);
 
-			printf("%s\n", "Server is listening for connections.");
+			printf("%s%s\n", "Server is listening for connections at path ",  path);
 
 
 		}
@@ -161,7 +161,7 @@ int _accept(int sfd){
 }
 
 
-void _connect(int sfd, int domain, int type, int port){
+void _connect(int sfd, int domain, int type, int port, char *path){
 	int is_AF_INET = 1;
 	if(port == 0)
 		is_AF_INET = 0;
@@ -178,10 +178,11 @@ void _connect(int sfd, int domain, int type, int port){
 		printf("%s\n", "connected to server");
 	}
 	else {
+		// af_unix unix domain sockets
 		struct sockaddr_un addr;
 		memset(&addr, 0, sizeof(addr));
 		addr.sun_family = AF_LOCAL;
-		strcpy(addr.sun_path, SOCKET_PATH);
+		strcpy(addr.sun_path, path);
 		int c = connect(sfd, (struct sockaddr *)&addr, sizeof(addr));
 		print_error(c, "could not connect to server.");
 		printf("%s\n", "connected to server");
@@ -207,7 +208,7 @@ void * reading_thread(void * arg){
 }
 
 
-int _select(struct select_fds * fds, int len){
+int _select(struct select_fds * fds, int *len){
 	int ret;
 	int i;
 	struct timeval tv;
@@ -215,7 +216,7 @@ int _select(struct select_fds * fds, int len){
 	tv.tv_sec = 0;
 
 	int max_fd = 0;
-	for(i = 0; i< len; i++){
+	for(i = 0; i< *len; i++){
 		if(fds[i].fd > max_fd)
 			max_fd = fds[i].fd;
 	}
@@ -225,7 +226,7 @@ int _select(struct select_fds * fds, int len){
 		FD_ZERO(&rfds);
 		FD_ZERO(&wfds);
 		FD_ZERO(&efds);
-		for(i = 0; i< len; i++){
+		for(i = 0; i< *len; i++){
 			switch(fds[i].type){
 				case READ_ARRAY: FD_SET(fds[i].fd, &rfds); break;
 				case WRITE_ARRAY: FD_SET(fds[i].fd, &wfds); break;
@@ -237,7 +238,7 @@ int _select(struct select_fds * fds, int len){
 		print_error(ret, "Select statement failed");
 
 
-		for(i = 0; i< len; i++){
+		for(i = 0; i< *len; i++){
 			switch(fds[i].type){
 				case READ_ARRAY: if (FD_ISSET(fds[i].fd, &rfds)){ fds[i].function(fds[i].fd); } break;
 				case WRITE_ARRAY: if (FD_ISSET(fds[i].fd, &wfds)){ fds[i].function(fds[i].fd); } break;

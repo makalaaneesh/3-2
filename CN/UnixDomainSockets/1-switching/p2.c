@@ -9,8 +9,8 @@ int nsfd;
 int fd;
 
 void init(){
-	usfd = c_socket(AF_LOCAL, SOCK_STREAM);
-	_connect(usfd, AF_LOCAL, SOCK_STREAM, 0);
+	usfd = c_socket(AF_LOCAL, SOCK_STREAM, "unix.sock");
+	_connect(usfd, AF_LOCAL, SOCK_STREAM, 0, "unix.sock");
 
 }
 
