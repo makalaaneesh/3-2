@@ -20,9 +20,11 @@
 #include <stropts.h>
 #include <poll.h>
 
+#define CONTROLLEN  CMSG_LEN(sizeof(int))
 #define READ_ARRAY 1
 #define WRITE_ARRAY 2
 #define EXCEPT_ARRAY 3
+
 
 struct select_fds{
 	int type;
@@ -79,11 +81,11 @@ void get_my_ip(int sf){
 
 
 // socket call for a client
-int _socket(int domain, int type){
-	_socket(domain, type, 0); // to indicate that client has made the call.
+int c_socket(int domain, int type){
+	s_socket(domain, type, 0); // to indicate that client has made the call.
 }
 
-int _socket(int domain, int type ,int port){
+int s_socket(int domain, int type ,int port){
 	// domain - AF_INET, AF_UNIX
 	// type - SOCK_STREAM, SOCK_DGRAM
 
@@ -97,7 +99,7 @@ int _socket(int domain, int type ,int port){
 
 	struct sockaddr_in server_addr;
 	
-	sfd = socket(domain, int type, 0);
+	sfd = socket(domain, type, 0);
 	print_error(sfd, "error opening socket");
 
 	//setting resuseaddr so that we don't have to constantly wait to the socket to timeout out of it's TIMEWAIT state.
@@ -131,7 +133,7 @@ int _accept(int sfd){
 	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
 	print_error(nsfd, "Failed in accepting connection");
 	printf("Accepted connection.\n");
-	get_peer_ip();
+	get_peer_ip(nsfd);
 	return nsfd;
 }
 
@@ -156,7 +158,7 @@ void * reading_thread(void * arg){
 	read_buf = (char *)malloc(sizeof(char)*100);
 	while(1){
 
-		int r = read(service_sfd, read_buf, 100);
+		int r = read(sfd, read_buf, 100);
 		print_error(r, "read failed in reading thread");
 		if (r >0)
 			printf("Server->[%s]\n", read_buf);
@@ -165,11 +167,11 @@ void * reading_thread(void * arg){
 		memset(read_buf, 0, strlen(read_buf));
 
 	}
-	close(service_sfd);
+	
 }
 
 
-int _select(struct *select_fds, int len){
+int _select(struct select_fds * fds, int len){
 	int ret;
 	int i;
 	struct timeval tv;
@@ -178,8 +180,8 @@ int _select(struct *select_fds, int len){
 
 	int max_fd = 0;
 	for(i = 0; i< len; i++){
-		if(select_fds[i].fd > max_fd)
-			max_fd = select_fds[i].fd;
+		if(fds[i].fd > max_fd)
+			max_fd = fds[i].fd;
 	}
 
 	while(1){
@@ -188,27 +190,100 @@ int _select(struct *select_fds, int len){
 		FD_ZERO(&wfds);
 		FD_ZERO(&efds);
 		for(i = 0; i< len; i++){
-			switch(select_fds[i].type){
-				case READ_ARRAY: FD_SET(select_fds[i].fd, &rfds); break;
-				case WRITE_ARRAY: FD_SET(select_fds[i].fd, &wfds); break;
-				case EXCEPT_ARRAY: FD_SET(select_fds[i].fd, &efds); break;
+			switch(fds[i].type){
+				case READ_ARRAY: FD_SET(fds[i].fd, &rfds); break;
+				case WRITE_ARRAY: FD_SET(fds[i].fd, &wfds); break;
+				case EXCEPT_ARRAY: FD_SET(fds[i].fd, &efds); break;
 			}
 		}
 
 		ret = select(max_fd + 1 , &rfds, &wfds, &efds, &tv);
 		print_error(ret, "Select statement failed");
-		
+
 
 		for(i = 0; i< len; i++){
-			switch(select_fds[i].type){
-				case READ_ARRAY: if (FD_ISSET(select_fds[i].fd, &rfds)){ function(select_fds[i].fd); } break;
-				case WRITE_ARRAY: if (FD_ISSET(select_fds[i].fd, &wfds)){ function(select_fds[i].fd); } break;
-				case EXCEPT_ARRAY: if (FD_ISSET(select_fds[i].fd, &efds)){ function(select_fds[i].fd); } break;
+			switch(fds[i].type){
+				case READ_ARRAY: if (FD_ISSET(fds[i].fd, &rfds)){ fds[i].function(fds[i].fd); } break;
+				case WRITE_ARRAY: if (FD_ISSET(fds[i].fd, &wfds)){ fds[i].function(fds[i].fd); } break;
+				case EXCEPT_ARRAY: if (FD_ISSET(fds[i].fd, &efds)){ fds[i].function(fds[i].fd); } break;
 			}
 		}	
 		
 		
 	}
 
+
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+
+/* size of control buffer to send/recv one file descriptor */
+
+
+
+int send_fd(int sfd, int fd_to_send){
+	struct msghdr msg;
+	struct iovec iov[1]; //http://www.gnu.org/software/libc/manual/html_node/Scatter_002dGather.html
+	struct cmsghdr * cmptr = (struct cmsghdr *)malloc(sizeof(struct cmsghdr));
+	char buf[2]; /* send_fd()/recv_fd() 2-byte protocol */
+
+
+	iov[0].iov_base = buf;
+	iov[0].iov_len = 2;
+	msg.msg_iov = iov;
+	msg.msg_iovlen = 1;
+	msg.msg_name = NULL;
+	msg.msg_namelen = 0;
+
+	if (fd_to_send < 0){
+		msg.msg_control = NULL;
+		msg.msg_controllen = 0;
+		buf[1] = -fd_to_send; // nonzero status means error
+		if (buf[1] == 0)
+            buf[1] = 1; /* -256, etc. would screw up protocol */
+	}
+	else{
+		cmptr->cmsg_level = SOL_SOCKET;
+		cmptr->cmsg_type = SCM_RIGHTS; //to indicate that we are passing access rights. (SCM stands for socket-level control message.)
+		cmptr->cmsg_len = CONTROLLEN;
+		msg.msg_control = cmptr;
+		msg.msg_controllen = CONTROLLEN;
+		*(int *)CMSG_DATA(cmptr) = fd_to_send;
+		buf[1] = 0; //status is ok
+
+	}
+	buf[0] = 0;
+	int s = sendmsg(sfd, &msg, 0);
+	print_error(s, "Failed to send fd!");
+	return 0; //success
+}
+
+
+int recv_fd(int sfd){
+	int nr, newfd, status;
+	char *ptr;
+	char buf[MAXLINE];
+	srtuct iovec iov[1];
+	struct msghdr msg;
+	struct cmsghdr * cmptr = (struct cmsghdr *)malloc(sizeof(struct cmsghdr));
+
+	status = -1;
+
+	iov[0].iov_base = buf;
+	iov[0].iov_len = 2;
+	msg.msg_iov = iov;
+	msg.msg_iovlen = 1;
+	msg.msg_name = NULL;
+	msg.msg_namelen = 0;
+	msg.msg_control = cmptr;
+	msg.msg_controllen = CONTROLLEN;
+
+	int nr = recvmsg(sfd, &msg, 0);
+	print_error(nr, "Failed to recive fd");
+
+
+	newfd = *(int *)CMSG_DATA(cmptr);
+	return newfd;
 
 }
