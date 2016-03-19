@@ -4,12 +4,12 @@
 #define MAX_LEN 7
 
 
-int sfd;
+int usfd;
 int nsfd;
 int fd;
 void init(){
-	sfd = s_socket(AF_LOCAL, SOCK_STREAM, 9999);
-	nsfd = _accept(sfd);
+	usfd = s_socket(AF_LOCAL, SOCK_STREAM, 9999);
+	nsfd = _accept(usfd);
 }
 
 int main(int argc, char *argv[1]){
