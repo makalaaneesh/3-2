@@ -58,19 +58,36 @@ void *service (void *arg){
 
 
 
-void *recv_fds_server(void * arg){
-	
-
+void *recv_fds(void * arg){
+	int fd_to_read = *(int *)arg;
 	printf("Multiplex %s waiting for new clients\n", type);
 
 	int fd = 0;
 	while(1){ 
-		fd = recv_fd(unsfd);
+		fd = recv_fd(fd_to_read);
 		if(fd == 0)
 			break;
-		client_fd_list[client_fd_list_index++] = fd;
-		pthread_t t;
-		pthread_create(&t, NULL, service, (void*)&fd);
+
+		if(client_fd_list_index >= capacity){
+			printf("MAXXXXXXXXX\n");
+			if (strcmp(next, "server") != 0 ){ // except the multiplex e.
+				send_fd(next_unsfd,fd);
+				close(fd);
+			}
+			else{ //multiplex. 
+				printf("Enter the process id of the server\n");
+				char server_pid[10];
+				scanf("%s", server_pid);
+				kill(atoi(server_pid), SIGUSR1);
+				printf("Sent a signal to the server asking it to close the counter!!!\n");
+			}
+			
+		}
+		else{
+			client_fd_list[client_fd_list_index++] = fd;
+			pthread_t t;
+			pthread_create(&t, NULL, service, (void*)&fd);
+		}
 	}
 
 	
@@ -88,6 +105,8 @@ void* init_previous_multiplex_connection(void * arg){
 	printf("%s is waiting to connect to previous connection\n", type);
 	_connect(prev_usfd, AF_LOCAL, SOCK_STREAM, 0, p_sockname);
 	printf("%s is initiated and back connected to %s\n", type, prev);
+	pthread_t pr;
+	pthread_create(&pr, NULL, recv_fds, (void*)&prev_usfd);
 }
 
 void* init_next_multiplex_connection(void * arg){
@@ -122,12 +141,14 @@ int main(int argc, char*argv[]){
 		printf("PREV\n");
 		pthread_t p;
 		pthread_create(&p, NULL, init_previous_multiplex_connection, (void*)0);
+
 	}
+
 
 
 	
 	pthread_t clients;
-	pthread_create(&clients, NULL, recv_fds_server, (void*)0);
+	pthread_create(&clients, NULL, recv_fds, (void*)&unsfd); //thread to start receiving fds from the main server.
 
 
 	pthread_join(clients);

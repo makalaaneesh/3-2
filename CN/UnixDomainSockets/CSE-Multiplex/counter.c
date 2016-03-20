@@ -14,7 +14,18 @@ struct service{
 
 }services[MAX_SERVICES];
 
+
+void sig_handler(int signo){
+	printf("Exiting. All counters are closed!\n");
+	exit(1);
+}
+
 void server_init(){
+
+	if(signal(SIGUSR1, sig_handler) == SIG_ERR){
+  		printf("%s\n", "Error in catching SIGINT");
+   	}
+
 
 	services[0].port = 9997;
 	services[1].port = 9998;

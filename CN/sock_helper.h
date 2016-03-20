@@ -165,7 +165,7 @@ int ud_accept(int sfd){
 
 int _accept(int sfd){
 	int nsfd;
-	socklen_t client_addr_len; // var to store len of the address of client. 
+	int client_addr_len; // var to store len of the address of client. 
 	
 	struct sockaddr_in client_addr; // to store the address of the accepted client.
 
