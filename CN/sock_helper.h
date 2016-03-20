@@ -138,7 +138,8 @@ int s_socket(int domain, int type ,int port, char *path){
 			int b = bind(sfd, (struct sockaddr *)&addr, sizeof(addr));
 			print_error(b, "Failed to bind.");
 
-			listen(sfd, 3);
+			int l = listen(sfd, 3);
+			print_error(l , "Failed to listen");
 
 			printf("%s%s\n", "Server is listening for connections at path ",  path);
 
@@ -149,9 +150,23 @@ int s_socket(int domain, int type ,int port, char *path){
 
 }
 
+int ud_accept(int sfd){
+	int nsfd;
+	socklen_t client_addr_len; // var to store len of the address of client. 
+	
+	struct sockaddr_un client_addr; // to store the address of the accepted client.
+
+	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
+	print_error(nsfd, "Failed in accepting connection");
+	printf("Accepted connection.\n");
+	// get_peer_ip(nsfd);
+	return nsfd;
+}
+
 int _accept(int sfd){
 	int nsfd;
-	int client_addr_len; // var to store len of the address of client. 
+	socklen_t client_addr_len; // var to store len of the address of client. 
+	
 	struct sockaddr_in client_addr; // to store the address of the accepted client.
 
 	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );

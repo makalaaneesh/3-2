@@ -76,7 +76,7 @@ void * wait_for_incoming_connections(void * arg){
 //code the backup server will be executing
 void backup_server(){
 	usfd = c_socket(AF_LOCAL, SOCK_STREAM, "backup.sock");
-	_connect(usfd, AF_LOCAL, SOCK_STREAM, 0, "backup.sock");\
+	_connect(usfd, AF_LOCAL, SOCK_STREAM, 0, "backup.sock");
 
 	sfd = recv_fd(usfd); // backup server will first receive the main sfd.
 	pthread_t clients;
