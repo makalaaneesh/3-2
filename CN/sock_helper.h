@@ -293,6 +293,8 @@ int send_fd(int sfd, int fd_to_send){
 	buf[0] = 0;
 	int s = sendmsg(sfd, &msg, 0);
 	print_error(s, "Failed to send fd!");
+
+	printf("Sent fd %d\n", fd_to_send);
 	return 0; //success
 }
 
@@ -321,6 +323,8 @@ int recv_fd(int sfd){
 
 
 	newfd = *(int *)CMSG_DATA(cmptr);
+
+	printf("Received fd %d\n", newfd);
 	return newfd;
 
 }
