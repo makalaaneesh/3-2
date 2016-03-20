@@ -16,6 +16,7 @@ void switch_to_backup(int signo){
 	int i;
 	for(i = 0; i< client_fd_list_index; i++){
 		send_fd(unsfd, client_fd_list[i]);
+		sleep(2);
 	}
 	// send_fd(unsfd, 100);
 	exit(1);
@@ -43,6 +44,10 @@ void server_init(){
 
 void *service (void *arg){
 	int fd = *(int *)arg;
+	struct stat buf;
+	int ff = fstat(fd, &buf);
+	print_error(ff, "file path error");
+	printf("Started thread to serve inode %ld\n", buf.st_ino);
 	char *read_buf;
 	read_buf = (char *)malloc(sizeof(char)*100);
 	while(1){
