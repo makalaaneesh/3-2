@@ -67,6 +67,13 @@ void server_init(){
  		services[i].usfd = c_socket(AF_LOCAL, SOCK_STREAM, sockname);
 		_connect(services[i].usfd, AF_LOCAL, SOCK_STREAM, 0, sockname);
 		printf("Connected to the multiplex %s\n", services[i].name);
+		/////trying to send pid to the multiplex
+		char *msg = (char*)malloc(sizeof(char)*200);
+		sprintf(msg, "%d", getpid());
+		int s = send(services[i].usfd, msg, strlen(msg), 0);
+		print_error(s, "Failed to send initial message");
+		// int pid = getpid();
+		// send_fd_extra(services[i].usfd, services[i].sfd, (void*)&pid); //sending pid for further signaling.
 		sleep(2);
 
  	}

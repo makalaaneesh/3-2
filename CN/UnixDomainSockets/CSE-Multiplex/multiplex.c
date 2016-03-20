@@ -19,6 +19,8 @@ int client_fd_list_index;
 int capacity; // actual capacity of the multiplex
 
 
+int ser_pid; //server pid
+
 
 void init(){
 	client_fd_list_index = 0;
@@ -28,7 +30,17 @@ void init(){
 	usfd = s_socket(AF_LOCAL, SOCK_STREAM, 9999, sockname);
 	unsfd = ud_accept(usfd);
 	printf("Connected to server. Ready to receive fds.\n");
+
+////////// attempting to receive pid of the server
+	char *init_msg = (char*)malloc(sizeof(char)*20);
+	int r = read(unsfd, init_msg, 100);
+	print_error(r, "read failed in reading thread");
+	printf("Received server pid via messsage!!! -> %s\n", init_msg);
+	ser_pid = atoi(init_msg);
+
+/////////
 	fflush(stdout);
+
 }
 
 
@@ -75,10 +87,8 @@ void *recv_fds(void * arg){
 				close(fd);
 			}
 			else{ //multiplex. 
-				printf("Enter the process id of the server\n");
-				char server_pid[10];
-				scanf("%s", server_pid);
-				kill(atoi(server_pid), SIGUSR1);
+
+				kill(ser_pid, SIGUSR1);
 				printf("Sent a signal to the server asking it to close the counter!!!\n");
 			}
 			

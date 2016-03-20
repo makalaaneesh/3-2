@@ -165,7 +165,7 @@ int ud_accept(int sfd){
 
 int _accept(int sfd){
 	int nsfd;
-	int client_addr_len; // var to store len of the address of client. 
+	socklen_t client_addr_len; // var to store len of the address of client. 
 	
 	struct sockaddr_in client_addr; // to store the address of the accepted client.
 
@@ -272,7 +272,6 @@ int _select(struct select_fds * fds, int *len){
 
 
 /* size of control buffer to send/recv one file descriptor */
-
 
 
 int send_fd(int sfd, int fd_to_send){
