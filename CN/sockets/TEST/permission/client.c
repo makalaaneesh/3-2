@@ -79,19 +79,19 @@ void start_listening(){
 	
 	printf("Trying to open socket at %d\n", my_port);
 	struct sockaddr_in server_addr, client_addr;
-	int client_addr_len; // var to store len of the address of client. 
-	char buffer[256];
+	int client_addr_len = sizeof(client_addr); // var to store len of the address of client. 
+	// char buffer[256];
 	// shutdown(nsfd, 2);
 	// shutdown(sfd,2);
 	// close(nsfd);
 	// close(sfd);
 	// sleep(30);
-	// sfd = socket(AF_INET, SOCK_STREAM, 0);
-	// print_error(sfd, "error opening socket");
+	int sfd1 = socket(AF_INET, SOCK_STREAM, 0);
+	print_error(sfd1, "error opening socket");
 
-	// // setting resuseaddr so that we don't have to constantly wait to the socket to timeout out of it's TIMEWAIT state.
-	// int set = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR, &(int){ 1 }, sizeof(int));
-	// print_error(set, "setsockopt(SO_REUSEADDR) failed");
+	// / setting resuseaddr so that we don't have to constantly wait to the socket to timeout out of it's TIMEWAIT state.
+	int set = setsockopt(sfd1, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, &(int){ 1 }, sizeof(int));
+	print_error(set, "setsockopt(SO_REUSEADDR) failed");
 
 
 	int port = my_port;
@@ -101,19 +101,16 @@ void start_listening(){
 	server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
 
 	// binding the socket to the addr
-	int b = bind(sfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	int b = bind(sfd1, (struct sockaddr *)&server_addr, sizeof(server_addr));
 	print_error(b, "Failed to bind.");
 
-	listen(sfd, 3);
+	listen(sfd1, 3);
 	printf("%s\n", "Server is listening for connections.");
-	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
-	get_peer_ip(nsfd);
-	print_error(nsfd, "Failed in accepting connection");
-	printf("Accepted connection from %d\n", inet_ntoa(client_addr.sin_addr));
 
-	nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
-	get_peer_ip(nsfd);
-	print_error(nsfd, "Failed in accepting connection");
+
+	int nsfd1 = accept(sfd1 ,(struct sockaddr * )&client_addr, &client_addr_len );
+	// get_peer_ip(nsfd1);
+	print_error(nsfd1, "Failed in accepting connection");
 	printf("Accepted connection from %d\n", inet_ntoa(client_addr.sin_addr));
 }
 void *reading_thread(void * arg){
@@ -149,12 +146,12 @@ int main(int argc, char *argv[]){
 	int port; //port on which server runs
 	port = SERVER_FAMOUS_PORT;
 	if (argc <= 2){
-		printf("service required(lower/upper/return)\n");
+		printf("service required(echo)\n");
 		exit(1);
 	}
 	my_port = atoi(argv[2]);
 
-	int client_addr_len; // var to store len of the address of client. 
+	
 	char *buffer, buffer1[256];
 	char *service = argv[1];
 
@@ -162,12 +159,14 @@ int main(int argc, char *argv[]){
 
 	struct sockaddr_in server_addr;
 	struct sockaddr_in my_addr;
+	int client_addr_len; // var to store len of the address of client. 
 	// creating a socket
 	sfd = socket(AF_INET, SOCK_STREAM, 0);
 	print_error(sfd, "error opening socket");
 
 
-
+	int set = setsockopt(sfd, SOL_SOCKET, SO_REUSEADDR|SO_REUSEPORT, &(int){ 1 }, sizeof(int));
+	print_error(set, "setsockopt(SO_REUSEADDR) failed");
 
 	// port = atoi(argv[1]);
 	server_addr.sin_family = AF_INET;
@@ -177,11 +176,11 @@ int main(int argc, char *argv[]){
 
 
 //binding before connecting
-	// my_addr = server_addr;
-	// my_addr.sin_port = htons(atoi(argv[2]));
+	my_addr = server_addr;
+	my_addr.sin_port = htons(atoi(argv[2]));
 
-	// int b = bind(sfd, (struct sockaddr *)&my_addr, sizeof(my_addr));
-	// print_error(b, "Failed to bind.");
+	int b = bind(sfd, (struct sockaddr *)&my_addr, sizeof(my_addr));
+	print_error(b, "Failed to bind.");
 // binding before connecting
 
 
@@ -202,7 +201,7 @@ int main(int argc, char *argv[]){
 	int s = send(sfd, service, sizeof(service), 0);
 	print_error(s, "Failed to send initial message to server");
 	int r = recv(sfd, buffer1, 256, 0);
-	print_error(r, "Failed to receive a reply from the server");
+	print_error(r, "Faimled to receive a reply from the server");
 	printf("Server:%s\n", buffer1);
 
 	int service_port = atoi(buffer1);
@@ -213,13 +212,14 @@ int main(int argc, char *argv[]){
 	nsfd = sfd;
 
 	if(service_port != 1){
-		// port is returned. Need to take permission from the existing client.
+		// port is returned. Need to take perission from the existing client.
 		memset(buffer, 0, strlen(buffer));
 		memset(buffer1, 0, strlen(buffer1));
 		// sleep(15);
 		close(sfd);
 		
 		printf("Trying to connect to other client\n");
+		sleep(5);
 		nsfd = socket(AF_INET, SOCK_STREAM, 0);
 		print_error(nsfd, "error opening socket");
 

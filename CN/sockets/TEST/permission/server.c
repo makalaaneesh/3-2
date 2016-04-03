@@ -12,7 +12,7 @@
 #define STDOUT 1
 
 
-int clients = 0;
+int clients;
 int client_nsfd;
 int echo_pid = 0;
 int client_port;
@@ -87,6 +87,7 @@ void print_error(int val, char*msg){
 }
 
 int main(int argc, char *argv[]){
+	clients = 0;
 	if(signal(SIGINT, clean) == SIG_ERR){
   		printf("%s\n", "Error in catching SIGINT");
  	}
@@ -132,13 +133,15 @@ int main(int argc, char *argv[]){
 		nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
 		print_error(sfd, "Failed in accepting connection");
 		printf("Accepted connection from %d\n", inet_ntoa(client_addr.sin_addr));
-
+		int r = recv(nsfd, buffer, 256, 0);
+		print_error(r, "Read fail");
 		if (clients > 0){
 			int port = client_port;
+			printf("Client port is %d\n", port);
 			char * msg = (char *)malloc(sizeof(char)*100);
 			sprintf(msg, "%d", port);
 			int s = send(nsfd, msg, strlen(msg), 0);
-			print_error(s, "Failed to send back initial messageeee");
+			print_error(s, "Failed to send back initial messag!!!");
 			close(nsfd);
 			kill(echo_pid, SIGUSR1);
 			continue;
@@ -157,12 +160,13 @@ int main(int argc, char *argv[]){
 		}
 
 
+		printf("Ready to fork\n");
+		fflush(stdout);
 		int pid = fork();
 		print_error(pid, "fork failed");
 
 		if (pid == 0){//child
-			int r = recv(nsfd, buffer, 256, 0);
-			print_error(r, "Read failed");
+			
 			close(sfd);
 			// printf("1-%d\n", nsfd);
 			if(nsfd != STDIN){
