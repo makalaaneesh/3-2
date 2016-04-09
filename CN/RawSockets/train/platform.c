@@ -14,6 +14,7 @@
 #include <stropts.h>
 
 #include "../../helper.h"
+#include "../../sock_helper.h"
 
 
 #define SHMTOKEN 123123
@@ -21,14 +22,14 @@
 
 int pno;
 
-void print_error(int val, char*msg){
-	if(val < 0){
-		perror(msg);
-		exit(val);
-	}
-}
+// void print_error(int val, char*msg){
+// 	if(val < 0){
+// 		perror(msg);
+// 		exit(val);
+// 	}
+// }
 
-void * reading_thread(void * arg){
+void * station_reading_thread(void * arg){
 	char *read_buf;
 	read_buf = (char *)malloc(sizeof(char)*100);
 	while(1){
@@ -91,7 +92,7 @@ void signal_station(){
 int main(int argc, char *argv[]){
 	init();
 	pthread_t t;
-	pthread_create(&t, NULL, reading_thread, (void*)0);
+	pthread_create(&t, NULL, station_reading_thread, (void*)0);
 	pthread_t tt;
 	pthread_create(&tt, NULL, cable_tv_reading_thread, (void*)0);
 
@@ -130,10 +131,20 @@ int main(int argc, char *argv[]){
 	printf("Platform %d is listening for connections.\n", pno);
 	fflush(stdout);
 
+	//connect to the unix domain socket to receive fds.
+	char *sock_name = (char*)malloc(sizeof(char)*100);
+	sprintf(sock_name, "p%d", pno);
+	int usfd = c_socket(AF_LOCAL, SOCK_STREAM, sock_name);
+	_connect(usfd, AF_LOCAL, SOCK_STREAM, 0, sock_name);
+
+	printf("Platform %d is listening for FDs\n", pno);
+	fflush(stdout);
+
 	//accept connection from incoming client.
 	while(1){
 
-		nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
+		// nsfd = accept(sfd,(struct sockaddr * )&client_addr, &client_addr_len );
+		nsfd = recv_fd(usfd); // receiving the fd from the station
 		print_error(nsfd, "Failed in accepting connection");
 		printf("[%d]Accepted connection from %d\n",pno, inet_ntoa(client_addr.sin_addr));
 

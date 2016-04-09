@@ -18,6 +18,7 @@
 
 #include <stropts.h>
 #include "../../helper.h"
+#include "../../sock_helper.h"
 
 #define PORTS 3
 #define PLATFORMS 2
@@ -38,14 +39,16 @@ struct platform{
 	int pid;
 	int port;
 	int pfd;
+	int usfd;
+	int unsfd;
 };
-void print_error(int val, char*msg){
-	if(val < 0){
-		perror(msg);
-		exit(val);
-	}
-}
-struct platform platforms[2] = { {1,1,0,10001,0}, {2,1,0,10002,0} };
+// void print_error(int val, char*msg){
+// 	if(val < 0){
+// 		perror(msg);
+// 		exit(val);
+// 	}
+// }
+struct platform platforms[2] = { {1,1,0,10001,0,0}, {2,1,0,10002,0,0} };
 struct train trains[PORTS] = { {1, 9997,0}, {2, 9998,0}, {3, 9999,0} };// corresponding to V, D, H
 
 
@@ -92,6 +95,10 @@ void init_platforms(){
 			close(pipefd[0]);
 			platforms[i].pid = pid;
 			platforms[i].pfd = pipefd[1];
+			char *sock_name = (char*)malloc(sizeof(char)*100);
+			sprintf(sock_name, "p%d", platforms[i].pno);
+			platforms[i].usfd = s_socket(AF_LOCAL, SOCK_STREAM, 9999, sock_name);
+			platforms[i].unsfd = ud_accept(platforms[i].usfd);
 		}
 	}
 }
@@ -200,9 +207,13 @@ void wait_for_incoming_connections(){
 
 
 				//send the free platform's listening port back to the train.
-				sprintf(msg, "%d", platforms[free_platform_index].port);
-				int s = send(nsfd, msg, strlen(msg), 0);
-				print_error(s, "Failed to send free platform port back to the train");
+				// sprintf(msg, "%d", platforms[free_platform_index].port);
+				// int s = send(nsfd, msg, strlen(msg), 0);
+				// print_error(s, "Failed to send free platform port back to the train");
+
+				// sending the nsfd to the concerned platform's usfd (Unix Domain Sockets (y) )
+				send_fd(platforms[free_platform_index].unsfd, nsfd);
+
 
 				// FD_CLR(trains[i].sfd, &rfds);
 				// close(nsfd);

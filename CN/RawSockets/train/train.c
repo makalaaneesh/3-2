@@ -126,37 +126,37 @@ int main(int argc, char *argv[]){
 
 	sleep(2);
 	int s;
-	printf("Waiting for reply from the station\n");
-	fflush(stdout);
+	// printf("Waiting for reply from the station\n");
+	// fflush(stdout);
 	// int s = send(sfd, service, sizeof(service), 0);
 	// print_error(s, "Failed to send initial message to server");
-	int r = recv(sfd, buffer1, 256, 0);
-	print_error(r, "Failed to receive a reply from the server");
-	printf("Station:[%s]\n", buffer1);
-	fflush(stdout);
+	// int r = recv(sfd, buffer1, 256, 0);
+	// print_error(r, "Failed to receive a reply from the server");
+	// printf("Station:[%s]\n", buffer1);
+	// fflush(stdout);
 
-	int service_port = atoi(buffer1);
-	if(service_port == 0){
-		printf("Service does not exist. \n");
-		exit(1);
-	}
+	// int service_port = atoi(buffer1);
+	// if(service_port == 0){
+	// 	printf("Service does not exist. \n");
+	// 	exit(1);
+	// }
 
 
 	memset(buffer, 0, strlen(buffer));
 	memset(buffer1, 0, strlen(buffer1));
 
-	close(sfd);
+	// close(sfd);
 	sleep(5);
-	int nsfd = socket(AF_INET, SOCK_STREAM, 0);
-	print_error(nsfd, "error opening socket");
+	// int nsfd = socket(AF_INET, SOCK_STREAM, 0);
+	// print_error(nsfd, "error opening socket");
 
-	server_addr.sin_port = htons(service_port);
-	c = connect(nsfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
-	print_error(c, "could not connect to platform.");
+	// server_addr.sin_port = htons(service_port);
+	// c = connect(nsfd, (struct sockaddr *)&server_addr, sizeof(server_addr));
+	// print_error(c, "could not connect to platform.");
 	printf("%s\n", "Connected to platofrm");
 	// service_sfd = nsfd;
 
-
+	int nsfd = sfd;
 
 	sprintf(buffer, "%s", "Compartment Details!");
 	s = send(nsfd, buffer, strlen(buffer), 0);
@@ -170,29 +170,6 @@ int main(int argc, char *argv[]){
 	print_error(s, "Failed to send message to server");
 
 
-
-	// while(1){
-	// 	printf("Enter message to send to group \n");
-	// 	ssize_t in  = getline(&buffer, &write_size, stdin);
-	// 	// fgets(buffer,256,stdin);
-	// 	// gets(buffer);
-	// 	// scanf("%s",buffer);
-	// 	print_error(in, "Failed to read from stdin");
-	// 	if(strcmp(buffer, "exit") == 0)
-	// 		exit(1);
-
-	// 	// printf("Sending:[%s]\n", buffer);
-	// 	fflush(stdout);
-	// 	int s = send(nsfd, buffer, strlen(buffer), 0);
-	// 	print_error(s, "Failed to send message to server");
-
-	// 	//receive a reply from the server
-	// 	// int r = recv(nsfd, buffer1, 256,0);
-	// 	// print_error(r, "Failed to receive a reply from the server");
-	// 	// printf("Server:%s", buffer1);
-	// 	memset(buffer, 0, 256);
-	// 	memset(buffer1, 0, 256);
-	// }
 
 
 	printf("Train leaving disconnected\n");
