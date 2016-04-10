@@ -24,10 +24,16 @@ struct writeres{
 	int status;
 };
 
-struct filelist{
-	string data<>;
-	string delim<>;
+
+struct entry{
+	string filename<>;
+	entry *nextEntry;
 };
+
+struct filelist{
+	entry *entries;
+};
+
 
 program NFS_PROG{
 	version NFS_VERS{

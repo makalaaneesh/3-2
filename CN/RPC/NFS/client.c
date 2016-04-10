@@ -63,6 +63,23 @@ int _write(char* filename, int offset, char * data, int len){
 }
 
 
+int _ls(){
+	filelist *out;
+	if( (out = nfs_ls_1((void*)NULL, c1)) == NULL ){
+		printf("Error : %s\n", clnt_sperror(c1, host));
+		exit(1);
+	}
+
+	// printf("Got result %d\n", out->list.list_len);
+	entry* e = out->entries;
+	while(e != NULL){
+		printf("%s\n", e->filename);
+		e = e->nextEntry;
+	}
+	return 0;
+}
+
+
 void argerror(int argc, int val, char*msg){
 	if(argc < val){
 		printf("%s\n", msg);
@@ -101,6 +118,9 @@ int main(int argc, char**argv){
 		char *filename = argv[3];
 		int offset = atoi(argv[4]);
 		_write(filename, offset, buf, n);
+	}
+	else if(strcmp(command,"ls") == 0){
+		_ls();
 	}
 
 	

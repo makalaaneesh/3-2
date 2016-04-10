@@ -42,9 +42,14 @@ struct writeres {
 };
 typedef struct writeres writeres;
 
+struct entry {
+	char *filename;
+	struct entry *nextEntry;
+};
+typedef struct entry entry;
+
 struct filelist {
-	char *data;
-	char *delim;
+	entry *entries;
 };
 typedef struct filelist filelist;
 
@@ -83,6 +88,7 @@ extern  bool_t xdr_readargs (XDR *, readargs*);
 extern  bool_t xdr_readres (XDR *, readres*);
 extern  bool_t xdr_writeargs (XDR *, writeargs*);
 extern  bool_t xdr_writeres (XDR *, writeres*);
+extern  bool_t xdr_entry (XDR *, entry*);
 extern  bool_t xdr_filelist (XDR *, filelist*);
 
 #else /* K&R C */
@@ -90,6 +96,7 @@ extern bool_t xdr_readargs ();
 extern bool_t xdr_readres ();
 extern bool_t xdr_writeargs ();
 extern bool_t xdr_writeres ();
+extern bool_t xdr_entry ();
 extern bool_t xdr_filelist ();
 
 #endif /* K&R C */

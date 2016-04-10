@@ -62,13 +62,23 @@ xdr_writeres (XDR *xdrs, writeres *objp)
 }
 
 bool_t
+xdr_entry (XDR *xdrs, entry *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_string (xdrs, &objp->filename, ~0))
+		 return FALSE;
+	 if (!xdr_pointer (xdrs, (char **)&objp->nextEntry, sizeof (entry), (xdrproc_t) xdr_entry))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
 xdr_filelist (XDR *xdrs, filelist *objp)
 {
 	register int32_t *buf;
 
-	 if (!xdr_string (xdrs, &objp->data, ~0))
-		 return FALSE;
-	 if (!xdr_string (xdrs, &objp->delim, ~0))
+	 if (!xdr_pointer (xdrs, (char **)&objp->entries, sizeof (entry), (xdrproc_t) xdr_entry))
 		 return FALSE;
 	return TRUE;
 }
