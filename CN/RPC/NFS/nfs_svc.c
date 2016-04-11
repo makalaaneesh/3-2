@@ -22,6 +22,8 @@ nfs_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 	union {
 		readargs nfs_read_1_arg;
 		writeargs nfs_write_1_arg;
+		filelist nfs_touch_1_arg;
+		filelist nfs_rm_1_arg;
 	} argument;
 	char *result;
 	xdrproc_t _xdr_argument, _xdr_result;
@@ -48,6 +50,18 @@ nfs_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		_xdr_argument = (xdrproc_t) xdr_writeargs;
 		_xdr_result = (xdrproc_t) xdr_writeres;
 		local = (char *(*)(char *, struct svc_req *)) nfs_write_1_svc;
+		break;
+
+	case NFS_TOUCH:
+		_xdr_argument = (xdrproc_t) xdr_filelist;
+		_xdr_result = (xdrproc_t) xdr_status;
+		local = (char *(*)(char *, struct svc_req *)) nfs_touch_1_svc;
+		break;
+
+	case NFS_RM:
+		_xdr_argument = (xdrproc_t) xdr_filelist;
+		_xdr_result = (xdrproc_t) xdr_status;
+		local = (char *(*)(char *, struct svc_req *)) nfs_rm_1_svc;
 		break;
 
 	default:

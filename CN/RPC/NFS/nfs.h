@@ -53,6 +53,11 @@ struct filelist {
 };
 typedef struct filelist filelist;
 
+struct status {
+	int val;
+};
+typedef struct status status;
+
 #define NFS_PROG 0x31230000
 #define NFS_VERS 1
 
@@ -66,6 +71,12 @@ extern  readres * nfs_read_1_svc(readargs *, struct svc_req *);
 #define NFS_WRITE 3
 extern  writeres * nfs_write_1(writeargs *, CLIENT *);
 extern  writeres * nfs_write_1_svc(writeargs *, struct svc_req *);
+#define NFS_TOUCH 4
+extern  status * nfs_touch_1(filelist *, CLIENT *);
+extern  status * nfs_touch_1_svc(filelist *, struct svc_req *);
+#define NFS_RM 5
+extern  status * nfs_rm_1(filelist *, CLIENT *);
+extern  status * nfs_rm_1_svc(filelist *, struct svc_req *);
 extern int nfs_prog_1_freeresult (SVCXPRT *, xdrproc_t, caddr_t);
 
 #else /* K&R C */
@@ -78,6 +89,12 @@ extern  readres * nfs_read_1_svc();
 #define NFS_WRITE 3
 extern  writeres * nfs_write_1();
 extern  writeres * nfs_write_1_svc();
+#define NFS_TOUCH 4
+extern  status * nfs_touch_1();
+extern  status * nfs_touch_1_svc();
+#define NFS_RM 5
+extern  status * nfs_rm_1();
+extern  status * nfs_rm_1_svc();
 extern int nfs_prog_1_freeresult ();
 #endif /* K&R C */
 
@@ -90,6 +107,7 @@ extern  bool_t xdr_writeargs (XDR *, writeargs*);
 extern  bool_t xdr_writeres (XDR *, writeres*);
 extern  bool_t xdr_entry (XDR *, entry*);
 extern  bool_t xdr_filelist (XDR *, filelist*);
+extern  bool_t xdr_status (XDR *, status*);
 
 #else /* K&R C */
 extern bool_t xdr_readargs ();
@@ -98,6 +116,7 @@ extern bool_t xdr_writeargs ();
 extern bool_t xdr_writeres ();
 extern bool_t xdr_entry ();
 extern bool_t xdr_filelist ();
+extern bool_t xdr_status ();
 
 #endif /* K&R C */
 

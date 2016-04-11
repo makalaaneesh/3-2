@@ -82,3 +82,13 @@ xdr_filelist (XDR *xdrs, filelist *objp)
 		 return FALSE;
 	return TRUE;
 }
+
+bool_t
+xdr_status (XDR *xdrs, status *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_int (xdrs, &objp->val))
+		 return FALSE;
+	return TRUE;
+}

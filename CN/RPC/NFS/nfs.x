@@ -35,10 +35,17 @@ struct filelist{
 };
 
 
+struct status{
+	int val;
+};
+
+
 program NFS_PROG{
 	version NFS_VERS{
 		filelist NFS_LS() = 1;
 		readres NFS_READ(readargs) = 2;
 		writeres NFS_WRITE(writeargs) = 3;
+		status NFS_TOUCH(filelist) = 4;
+		status NFS_RM(filelist) = 5;
 	} = 1;
 } = 0x31230000;

@@ -15,6 +15,44 @@
 
 #define MAXREADSIZE 1000
 
+status* nfs_touch_1_svc(filelist *inp, struct svc_req * rqstp){
+	static status out;
+	printf("TOUCH\n");
+	entry *list = inp->entries;
+	mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+	int c;
+   	while(list != NULL){
+   		c = creat(list->filename, mode);
+   		list = list->nextEntry;
+   	}
+   	out.val = -1;
+   	if (c >= 0){
+   		out.val = 0;
+   	}
+   	return(&out);
+
+
+}
+
+status* nfs_rm_1_svc(filelist *inp, struct svc_req * rqstp){
+	static status out;
+	printf("RM\n");
+	entry *list = inp->entries;
+	// mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+	int c;
+   	while(list != NULL){
+   		c = remove(list->filename);
+   		list = list->nextEntry;
+   	}
+   	out.val = c;
+   	if (c >= 0){
+   		out.val = 0;
+   	}
+   	return(&out);
+
+
+}
+
 
 filelist* nfs_ls_1_svc(void *inp, struct svc_req * rqstp){
 	static filelist out;

@@ -53,3 +53,33 @@ nfs_write_1(writeargs *argp, CLIENT *clnt)
 	}
 	return (&clnt_res);
 }
+
+status *
+nfs_touch_1(filelist *argp, CLIENT *clnt)
+{
+	static status clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, NFS_TOUCH,
+		(xdrproc_t) xdr_filelist, (caddr_t) argp,
+		(xdrproc_t) xdr_status, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+status *
+nfs_rm_1(filelist *argp, CLIENT *clnt)
+{
+	static status clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, NFS_RM,
+		(xdrproc_t) xdr_filelist, (caddr_t) argp,
+		(xdrproc_t) xdr_status, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}

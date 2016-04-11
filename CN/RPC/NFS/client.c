@@ -80,6 +80,87 @@ int _ls(){
 }
 
 
+
+int _touch(char **files, int no_of_files){
+	printf("Touch command\n");
+	status* out;
+	filelist in;
+
+	entry *head = (entry*)malloc(sizeof(entry));
+	head->filename = files[0];
+	head->nextEntry = NULL;
+	// no_of_files--;
+	// printf("%d\n", no_of_files);
+	// printf("%s\n", files[0]);
+
+	int c = 1;
+	for(c = 1; c<no_of_files; c++){
+		entry *e = head;
+		while(e->nextEntry != NULL){
+			e = e->nextEntry;
+		}
+		// printf("x\n");
+		e->nextEntry = (entry*)malloc(sizeof(entry));
+		e->nextEntry->filename = files[c];
+		e->nextEntry->nextEntry = NULL;
+	}
+	in.entries = head;
+
+	if( (out = nfs_touch_1(&in, c1)) == NULL ){
+		printf("Error : %s\n", clnt_sperror(c1, host));
+		exit(1);
+	}
+
+	if(out->val < 0){
+		printf("Error. Could not create files.\n");
+		exit(1);
+
+	}
+	else{
+		printf("Successful creation of files.\n");
+	}
+
+}
+int _rm(char **files, int no_of_files){
+	printf("rm command\n");
+	status* out;
+	filelist in;
+
+	entry *head = (entry*)malloc(sizeof(entry));
+	head->filename = files[0];
+	head->nextEntry = NULL;
+	// no_of_files--;
+	// printf("%d\n", no_of_files);
+	// printf("%s\n", files[0]);
+
+	int c = 1;
+	for(c = 1; c<no_of_files; c++){
+		entry *e = head;
+		while(e->nextEntry != NULL){
+			e = e->nextEntry;
+		}
+		// printf("x\n");
+		e->nextEntry = (entry*)malloc(sizeof(entry));
+		e->nextEntry->filename = files[c];
+		e->nextEntry->nextEntry = NULL;
+	}
+	in.entries = head;
+
+	if( (out = nfs_rm_1(&in, c1)) == NULL ){
+		printf("Error : %s\n", clnt_sperror(c1, host));
+		exit(1);
+	}
+
+	if(out->val < 0){
+		printf("Error. Could not delete files.\n");
+		exit(1);
+
+	}
+	else{
+		printf("Successful deletion of files.\n");
+	}
+
+}
 void argerror(int argc, int val, char*msg){
 	if(argc < val){
 		printf("%s\n", msg);
@@ -121,6 +202,16 @@ int main(int argc, char**argv){
 	}
 	else if(strcmp(command,"ls") == 0){
 		_ls();
+	}
+	else if(strcmp(command, "touch") == 0){
+		argerror(argc, 4,"Usage : client <hostname> touch <filename> <filename> <filename> ..");
+		int no_of_files = argc - 3;
+		_touch(&argv[3], no_of_files);
+	}
+	else if(strcmp(command, "rm") == 0){
+		argerror(argc, 4,"Usage : client <hostname> rm <filename> <filename> <filename> ..");
+		int no_of_files = argc - 3;
+		_rm(&argv[3], no_of_files);
 	}
 
 	
