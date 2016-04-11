@@ -62,6 +62,16 @@ xdr_writeres (XDR *xdrs, writeres *objp)
 }
 
 bool_t
+xdr_direntry (XDR *xdrs, direntry *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_string (xdrs, &objp->dirname, ~0))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
 xdr_entry (XDR *xdrs, entry *objp)
 {
 	register int32_t *buf;

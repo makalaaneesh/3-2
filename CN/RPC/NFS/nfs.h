@@ -42,6 +42,11 @@ struct writeres {
 };
 typedef struct writeres writeres;
 
+struct direntry {
+	char *dirname;
+};
+typedef struct direntry direntry;
+
 struct entry {
 	char *filename;
 	struct entry *nextEntry;
@@ -63,8 +68,8 @@ typedef struct status status;
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define NFS_LS 1
-extern  filelist * nfs_ls_1(void *, CLIENT *);
-extern  filelist * nfs_ls_1_svc(void *, struct svc_req *);
+extern  filelist * nfs_ls_1(direntry *, CLIENT *);
+extern  filelist * nfs_ls_1_svc(direntry *, struct svc_req *);
 #define NFS_READ 2
 extern  readres * nfs_read_1(readargs *, CLIENT *);
 extern  readres * nfs_read_1_svc(readargs *, struct svc_req *);
@@ -105,6 +110,7 @@ extern  bool_t xdr_readargs (XDR *, readargs*);
 extern  bool_t xdr_readres (XDR *, readres*);
 extern  bool_t xdr_writeargs (XDR *, writeargs*);
 extern  bool_t xdr_writeres (XDR *, writeres*);
+extern  bool_t xdr_direntry (XDR *, direntry*);
 extern  bool_t xdr_entry (XDR *, entry*);
 extern  bool_t xdr_filelist (XDR *, filelist*);
 extern  bool_t xdr_status (XDR *, status*);
@@ -114,6 +120,7 @@ extern bool_t xdr_readargs ();
 extern bool_t xdr_readres ();
 extern bool_t xdr_writeargs ();
 extern bool_t xdr_writeres ();
+extern bool_t xdr_direntry ();
 extern bool_t xdr_entry ();
 extern bool_t xdr_filelist ();
 extern bool_t xdr_status ();

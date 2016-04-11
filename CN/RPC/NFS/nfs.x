@@ -24,6 +24,9 @@ struct writeres{
 	int status;
 };
 
+struct direntry{
+	string dirname<>;
+};
 
 struct entry{
 	string filename<>;
@@ -42,7 +45,7 @@ struct status{
 
 program NFS_PROG{
 	version NFS_VERS{
-		filelist NFS_LS() = 1;
+		filelist NFS_LS(direntry) = 1;
 		readres NFS_READ(readargs) = 2;
 		writeres NFS_WRITE(writeargs) = 3;
 		status NFS_TOUCH(filelist) = 4;

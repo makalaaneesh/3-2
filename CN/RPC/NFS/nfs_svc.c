@@ -20,6 +20,7 @@ static void
 nfs_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 {
 	union {
+		direntry nfs_ls_1_arg;
 		readargs nfs_read_1_arg;
 		writeargs nfs_write_1_arg;
 		filelist nfs_touch_1_arg;
@@ -35,7 +36,7 @@ nfs_prog_1(struct svc_req *rqstp, register SVCXPRT *transp)
 		return;
 
 	case NFS_LS:
-		_xdr_argument = (xdrproc_t) xdr_void;
+		_xdr_argument = (xdrproc_t) xdr_direntry;
 		_xdr_result = (xdrproc_t) xdr_filelist;
 		local = (char *(*)(char *, struct svc_req *)) nfs_ls_1_svc;
 		break;

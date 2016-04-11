@@ -63,9 +63,11 @@ int _write(char* filename, int offset, char * data, int len){
 }
 
 
-int _ls(){
+int _ls(char *dirname){
 	filelist *out;
-	if( (out = nfs_ls_1((void*)NULL, c1)) == NULL ){
+	direntry in;
+	strcpy(in.dirname, dirname);
+	if( (out = nfs_ls_1(&in, c1)) == NULL ){
 		printf("Error : %s\n", clnt_sperror(c1, host));
 		exit(1);
 	}
@@ -189,19 +191,21 @@ int main(int argc, char**argv){
 		argerror(argc, 5,"Usage : client <hostname> write <filename> <offset> ..");
 		char *buf = (char*)malloc(sizeof(char)* 1000);
 		size_t n = 0;
-		getline(&buf, &n, stdin);
+		scanf("%s", buf);
+
 		//removing the \n at the end.
-		buf[strlen(buf)-1] = '\0';
-		n--;
+		// buf[strlen(buf)-1] = '\0';
+		// n--;
 
 
 		printf("%s\n", buf);
 		char *filename = argv[3];
 		int offset = atoi(argv[4]);
-		_write(filename, offset, buf, n);
+		_write(filename, offset, buf, strlen(buf));
 	}
 	else if(strcmp(command,"ls") == 0){
-		_ls();
+		argerror(argc, 4,"Usage : client <hostname> ls <dirname> ..");
+		_ls(argv[3]);
 	}
 	else if(strcmp(command, "touch") == 0){
 		argerror(argc, 4,"Usage : client <hostname> touch <filename> <filename> <filename> ..");

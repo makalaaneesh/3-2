@@ -10,13 +10,13 @@
 static struct timeval TIMEOUT = { 25, 0 };
 
 filelist *
-nfs_ls_1(void *argp, CLIENT *clnt)
+nfs_ls_1(direntry *argp, CLIENT *clnt)
 {
 	static filelist clnt_res;
 
 	memset((char *)&clnt_res, 0, sizeof(clnt_res));
 	if (clnt_call (clnt, NFS_LS,
-		(xdrproc_t) xdr_void, (caddr_t) argp,
+		(xdrproc_t) xdr_direntry, (caddr_t) argp,
 		(xdrproc_t) xdr_filelist, (caddr_t) &clnt_res,
 		TIMEOUT) != RPC_SUCCESS) {
 		return (NULL);

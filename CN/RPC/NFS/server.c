@@ -54,13 +54,15 @@ status* nfs_rm_1_svc(filelist *inp, struct svc_req * rqstp){
 }
 
 
-filelist* nfs_ls_1_svc(void *inp, struct svc_req * rqstp){
+filelist* nfs_ls_1_svc(direntry *inp, struct svc_req * rqstp){
+	printf("LS\n");
 	static filelist out;
 	entry* head = NULL;
-	DIR *d = opendir(".");
+	DIR *d = opendir(inp->dirname);
 	if(d == NULL){
 		printf("%s\n", "Direcotry does not exist\n");
-		return 0;
+		out.entries = head;
+		return(&out);
 	}
 	struct dirent *sd;
 	char **list = (char**)malloc(sizeof(char*)*100);
@@ -129,6 +131,7 @@ writeres * nfs_write_1_svc(writeargs *inp, struct svc_req * rqstp){
     int fd = open(inp->filename, O_WRONLY);
  
     lseek(fd, inp->offset, SEEK_SET);
+    printf("WRITE %s\n", inp->data);
     int w = write(fd, inp->data, inp->count);
  	out.status = w;
     close(fd);
