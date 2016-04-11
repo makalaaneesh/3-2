@@ -94,6 +94,28 @@ xdr_filelist (XDR *xdrs, filelist *objp)
 }
 
 bool_t
+xdr_attr (XDR *xdrs, attr *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_u_int (xdrs, &objp->mode))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
+xdr_sattrargs (XDR *xdrs, sattrargs *objp)
+{
+	register int32_t *buf;
+
+	 if (!xdr_entry (xdrs, &objp->file))
+		 return FALSE;
+	 if (!xdr_attr (xdrs, &objp->attrs))
+		 return FALSE;
+	return TRUE;
+}
+
+bool_t
 xdr_status (XDR *xdrs, status *objp)
 {
 	register int32_t *buf;

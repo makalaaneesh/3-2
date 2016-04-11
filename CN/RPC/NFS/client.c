@@ -163,6 +163,62 @@ int _rm(char **files, int no_of_files){
 	}
 
 }
+
+
+int _getattr(char * filename){
+	printf("GEtattr command\n");
+	attr* out;
+	entry in;
+
+	in.filename = (char*)malloc(sizeof(char)*100);
+	strcpy(in.filename ,filename);
+	in.nextEntry = NULL;
+	// printf("%d\n", no_of_files);
+	// printf("%s\n", files[0]);
+
+	
+
+	if( (out = nfs_getattr_1(&in, c1)) == NULL ){
+		printf("Error : %s\n", clnt_sperror(c1, host));
+		exit(1);
+	}
+
+	printf("Mode is %o\n", out->mode);
+}
+
+int _setattr(char * filename){
+	mode_t mode;
+	printf("Enter mode as in 444|666|777\n");
+	scanf("%o", &mode);
+
+	status *out;
+	sattrargs in;
+	in.file.filename = (char*)malloc(sizeof(filename));
+	strcpy(in.file.filename, filename);
+	in.file.nextEntry = NULL;
+	in.attrs.mode = mode;
+
+	// printf("1\n");
+
+	if( (out = nfs_setattr_1(&in, c1)) == NULL ){
+		printf("Error : %s\n", clnt_sperror(c1, host));
+		exit(1);
+	}
+
+	// printf("2\n");
+
+	if(out->val < 0){
+		printf("Error. Could not change permissions.\n");
+		exit(1);
+
+	}
+	else{
+		printf("Successful .\n");
+	}
+
+}
+
+
 void argerror(int argc, int val, char*msg){
 	if(argc < val){
 		printf("%s\n", msg);
@@ -216,6 +272,14 @@ int main(int argc, char**argv){
 		argerror(argc, 4,"Usage : client <hostname> rm <filename> <filename> <filename> ..");
 		int no_of_files = argc - 3;
 		_rm(&argv[3], no_of_files);
+	}
+	else if(strcmp(command,"getattr") == 0){
+		argerror(argc, 4,"Usage : client <hostname> getattr <filename> ..");
+		_getattr(argv[3]);
+	}
+	else if(strcmp(command,"setattr") == 0){
+		argerror(argc, 4,"Usage : client <hostname> setattr <filename> ..");
+		_setattr(argv[3]);
 	}
 
 	

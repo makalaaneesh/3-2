@@ -83,3 +83,33 @@ nfs_rm_1(filelist *argp, CLIENT *clnt)
 	}
 	return (&clnt_res);
 }
+
+attr *
+nfs_getattr_1(entry *argp, CLIENT *clnt)
+{
+	static attr clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, NFS_GETATTR,
+		(xdrproc_t) xdr_entry, (caddr_t) argp,
+		(xdrproc_t) xdr_attr, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}
+
+status *
+nfs_setattr_1(sattrargs *argp, CLIENT *clnt)
+{
+	static status clnt_res;
+
+	memset((char *)&clnt_res, 0, sizeof(clnt_res));
+	if (clnt_call (clnt, NFS_SETATTR,
+		(xdrproc_t) xdr_sattrargs, (caddr_t) argp,
+		(xdrproc_t) xdr_status, (caddr_t) &clnt_res,
+		TIMEOUT) != RPC_SUCCESS) {
+		return (NULL);
+	}
+	return (&clnt_res);
+}

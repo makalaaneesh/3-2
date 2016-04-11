@@ -15,6 +15,27 @@
 
 #define MAXREADSIZE 1000
 
+status* nfs_setattr_1_svc(sattrargs *inp, struct svc_req * rqstp){
+	printf("SETATTR\n");
+	static status out;
+	out.val = 0;
+	out.val = chmod(inp->file.filename, inp->attrs.mode);
+
+	return (&out);
+}
+
+attr* nfs_getattr_1_svc(entry *inp, struct svc_req * rqstp){
+	static attr out;
+	struct stat sb;
+ 	if (stat(inp->filename, &sb) == -1) {
+        perror("stat");
+        exit(EXIT_FAILURE);
+    }
+
+    out.mode = sb.st_mode &(S_IRWXU | S_IRWXG | S_IRWXO);
+    return(&out);
+}
+
 status* nfs_touch_1_svc(filelist *inp, struct svc_req * rqstp){
 	static status out;
 	printf("TOUCH\n");

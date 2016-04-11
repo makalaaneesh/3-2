@@ -37,10 +37,20 @@ struct filelist{
 	entry *entries;
 };
 
+struct attr{
+	unsigned int mode;
+};
+
+struct sattrargs{
+	entry file;
+	attr attrs;
+};
 
 struct status{
 	int val;
 };
+
+
 
 
 program NFS_PROG{
@@ -50,5 +60,7 @@ program NFS_PROG{
 		writeres NFS_WRITE(writeargs) = 3;
 		status NFS_TOUCH(filelist) = 4;
 		status NFS_RM(filelist) = 5;
+		attr NFS_GETATTR(entry) = 6;
+		status NFS_SETATTR(sattrargs) = 7;
 	} = 1;
 } = 0x31230000;
