@@ -1,0 +1,23 @@
+enter no. of terminals 4
+ enter the terminals
+i + * $
+
+
+p > > >
+
+< > < >
+
+< > > >
+
+
+< < < p
+
+
+enter the string
+
+
+i+i*i$(string data)
+
+
+
+
